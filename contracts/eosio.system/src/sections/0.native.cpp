@@ -1,4 +1,4 @@
-void native::check_auth_change(name contract, name account, const binary_extension<name> & authorized_by)
+void system::check_auth_change(name contract, name account, const binary_extension<name> & authorized_by)
 {
   name by(authorized_by.has_value() ? authorized_by.value().value : 0);
   if(by.value){
@@ -22,7 +22,7 @@ void native::check_auth_change(name contract, name account, const binary_extensi
   }
 }
 
-void native::limitauthchg(const name & account, const std::vector<name> & allow_perms, const std::vector<name> & disallow_perms)
+void system::limitauthchg(const name & account, const std::vector<name> & allow_perms, const std::vector<name> & disallow_perms)
 {
   _limitauthchg table(get_self(), get_self().value);
   require_auth(account);
@@ -51,7 +51,7 @@ void native::limitauthchg(const name & account, const std::vector<name> & allow_
   }
 }
 
-void native::newaccount(const name & creator, const name & new_account_name, ignore<authority> owner, ignore<authority> active)
+void system::newaccount(const name & creator, const name & new_account_name, ignore<authority> owner, ignore<authority> active)
 {
   if(creator != get_self()) {
     uint64_t tmp = new_account_name.value >> 4;
@@ -85,7 +85,7 @@ void native::newaccount(const name & creator, const name & new_account_name, ign
   });
 }
 
-void native::setabi(const name & acnt, const std::vector<char> & abi, const binary_extension<std::string> & memo)
+void system::setabi(const name & acnt, const std::vector<char> & abi, const binary_extension<std::string> & memo)
 {
   multi_index<name("abihash"), _abihash_s> table(get_self(), get_self().value);
   auto itr = table.find( acnt.value );

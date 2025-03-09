@@ -32,11 +32,14 @@
 
 
 using namespace eosio;
-CONTRACT native : public eosio::contract {
+CONTRACT system : public eosio::contract {
   public:
     using eosio::contract::contract;
 
 // STATIC
+    static constexpr symbol core_symbol = symbol(symbol_code("TWIG"), 8);
+    static constexpr symbol ram_symbol = symbol(symbol_code("RAM"), 0);
+
     static constexpr eosio::name active_permission{"active"_n};
     static constexpr eosio::name token_account{"eosio.token"_n};
     static constexpr eosio::name stake_account{"eosio.stake"_n};
@@ -45,12 +48,6 @@ CONTRACT native : public eosio::contract {
     static constexpr eosio::name saving_account{"eosio.saving"_n};
     static constexpr eosio::name fees_account{"eosio.fees"_n};
     static constexpr eosio::name null_account{"eosio.null"_n};
-
-    static constexpr symbol core_symbol = symbol(symbol_code("TWIG"), 8);
-    static constexpr symbol ramcore_symbol = symbol(symbol_code("RAMCORE"), 4);
-    static constexpr symbol ram_symbol = symbol(symbol_code("RAM"), 0);
-
-    static constexpr uint32_t rolling_window_size = 10;
 
     static constexpr uint32_t seconds_per_year = 52 * 7 * 24 * 3600;
     static constexpr uint32_t seconds_per_day = 24 * 3600;
@@ -63,7 +60,9 @@ CONTRACT native : public eosio::contract {
     static constexpr int64_t  inflation_precision = 100; // 2 decimals
     static constexpr int64_t  default_annual_rate = 500; // 5% annual rate
 
+    static constexpr int64_t user_ram_limit = 1'000'000'000ll; // 1GB, just a big number
 
+    static constexpr uint32_t rolling_window_size = 10;
 
 // TEMPLATES
     template<typename E, typename F>
@@ -85,8 +84,6 @@ CONTRACT native : public eosio::contract {
           return ( flags & ~static_cast<F>(field) );
     }
 
-
-
     #ifdef SYSTEM_BLOCKCHAIN_PARAMETERS
       struct blockchain_parameters_v1 : eosio::blockchain_parameters
       {
@@ -99,15 +96,13 @@ CONTRACT native : public eosio::contract {
       using blockchain_parameters_t = eosio::blockchain_parameters;
     #endif
 
-
-
 // STRUCTS //
     struct permission_level_weight
     {
       permission_level permission;
       uint16_t weight;
 
-      EOSLIB_SERIALIZE( permission_level_weight, (permission)(weight) )
+      EOSLIB_SERIALIZE(permission_level_weight, (permission)(weight))
     };
 
     struct key_weight
@@ -115,7 +110,7 @@ CONTRACT native : public eosio::contract {
       eosio::public_key key;
       uint16_t weight;
 
-      EOSLIB_SERIALIZE( key_weight, (key)(weight) )
+      EOSLIB_SERIALIZE(key_weight, (key)(weight))
     };
 
     struct wait_weight
@@ -123,7 +118,7 @@ CONTRACT native : public eosio::contract {
       uint32_t wait_sec;
       uint16_t weight;
 
-      EOSLIB_SERIALIZE( wait_weight, (wait_sec)(weight) )
+      EOSLIB_SERIALIZE(wait_weight, (wait_sec)(weight))
     };
 
     struct authority
@@ -133,7 +128,7 @@ CONTRACT native : public eosio::contract {
       std::vector<permission_level_weight> accounts;
       std::vector<wait_weight> waits;
 
-      EOSLIB_SERIALIZE( authority, (threshold)(keys)(accounts)(waits) )
+      EOSLIB_SERIALIZE(authority, (threshold)(keys)(accounts)(waits))
     };
 
     struct block_header
@@ -172,6 +167,21 @@ CONTRACT native : public eosio::contract {
 
       std::optional<block_batch_info> result;
       error_code_enum error_code = no_error;
+    };
+
+    struct wasm_parameters
+    {
+      uint32_t max_mutable_global_bytes;
+      uint32_t max_table_elements;
+      uint32_t max_section_elements;
+      uint32_t max_linear_memory_init;
+      uint32_t max_func_local_bytes;
+      uint32_t max_nested_structures;
+      uint32_t max_symbol_bytes;
+      uint32_t max_module_bytes;
+      uint32_t max_code_bytes;
+      uint32_t max_pages;
+      uint32_t max_call_depth;
     };
 
 // TABLES //
@@ -244,7 +254,7 @@ CONTRACT native : public eosio::contract {
     };
     typedef multi_index<name("bidrefunds"), _bidrefunds_s> _bidrefunds;
 
-    struct [[eosio::table("global")]] _global_s
+    struct [[eosio::table("global")]] _global_s : eosio::blockchain_parameters
     {
       uint64_t free_ram()const { return max_ram_size - total_ram_bytes_reserved; }
 
@@ -273,7 +283,6 @@ CONTRACT native : public eosio::contract {
 
       uint64_t primary_key() const { return start_time.sec_since_epoch(); };
 
-      // explicit serialization macro is not necessary, used here only to improve compilation time
       EOSLIB_SERIALIZE(_schedules_s, (start_time)(continuous_rate))
     };
     typedef multi_index<name("schedules"), _schedules_s> _schedules;
@@ -294,13 +303,13 @@ CONTRACT native : public eosio::contract {
       uint16_t location = 0;
       eosio::block_signing_authority producer_authority;
 
-      uint64_t primary_key()const { return owner.value;                             }
-      double   by_votes()const    { return is_active ? -total_votes : total_votes;  }
-      bool     active()const      { return is_active;                               }
-      void     deactivate()       { producer_key = public_key(); producer_authority.reset(); is_active = false; }
+      uint64_t primary_key() const { return owner.value; };
+      double by_votes() const { return is_active ? -total_votes : total_votes; };
+      bool active() const { return is_active; };
+      void deactivate() { producer_key = public_key(); producer_authority.reset(); is_active = false; };
 
-      eosio::block_signing_authority get_producer_authority()const {
-         if( producer_authority.has_value() ) {
+      eosio::block_signing_authority get_producer_authority() const {
+         if(producer_authority.has_value()){
             bool zero_threshold = std::visit( [](auto&& auth ) -> bool {
                return (auth.threshold == 0);
             }, *producer_authority );
@@ -314,29 +323,29 @@ CONTRACT native : public eosio::contract {
       const_mem_fun<_producers_s, double, &_producers_s::by_votes>>
     >_producers;
 
-  struct [[eosio::table("finkeys")]] finalizer_key_info {
+    struct [[eosio::table("finkeys")]] _finkeys_s {
       uint64_t          id;                   // automatically generated ID for the key in the table
       name              finalizer_name;       // name of the finalizer owning the key
       std::string       finalizer_key;        // finalizer key in base64url format
       std::vector<char> finalizer_key_binary; // finalizer key in binary format in Affine little endian non-montgomery g1
 
-      uint64_t    primary_key() const { return id; }
-      uint64_t    by_fin_name() const { return finalizer_name.value; }
+      uint64_t primary_key() const { return id; };
+      uint64_t by_fin_name() const { return finalizer_name.value; };
       // Use binary format to hash. It is more robust and less likely to change
       // than the base64url text encoding of it.
       // There is no need to store the hash key to avoid re-computation,
       // which only happens if the table row is modified. There won't be any
       // modification of the table rows of; it may only be removed.
-      checksum256 by_fin_key()  const { return eosio::sha256(finalizer_key_binary.data(), finalizer_key_binary.size()); }
+      checksum256 by_fin_key() const { return eosio::sha256(finalizer_key_binary.data(), finalizer_key_binary.size()); }
 
       bool is_active(uint64_t finalizer_active_key_id) const { return id == finalizer_active_key_id ; }
-   };
+    };
 
-  typedef multi_index<
-      "finkeys"_n, finalizer_key_info,
-      indexed_by<"byfinname"_n, const_mem_fun<finalizer_key_info, uint64_t, &finalizer_key_info::by_fin_name>>,
-      indexed_by<"byfinkey"_n, const_mem_fun<finalizer_key_info, checksum256, &finalizer_key_info::by_fin_key>>
-   > finalizer_keys_table;
+    typedef multi_index<
+        name("finkeys"), _finkeys_s,
+        indexed_by<name("byfinname"), const_mem_fun<_finkeys_s, uint64_t, &_finkeys_s::by_fin_name>>,
+        indexed_by<name("byfinkey"), const_mem_fun<_finkeys_s, checksum256, &_finkeys_s::by_fin_key>>
+    >_finkeys;
 
    // finalizer_info stores information about a finalizer.
   struct [[eosio::table("finalizers")]] finalizer_info {
@@ -421,16 +430,16 @@ CONTRACT native : public eosio::contract {
       name owner;
       asset net_weight;
       asset cpu_weight;
-      int64_t ram_bytes = 1'000'000'000;
+      int64_t ram_bytes = user_ram_limit;
 
-      bool is_empty()const { return net_weight.amount == 0 && cpu_weight.amount == 0 && ram_bytes == 0; }
+      bool is_empty()const { return net_weight.amount == 0 && cpu_weight.amount == 0 && ram_bytes == 0; };
       uint64_t primary_key()const { return owner.value; };
 
       EOSLIB_SERIALIZE(_userres_s, (owner)(net_weight)(cpu_weight)(ram_bytes))
     };
     typedef multi_index<name("userres"), _userres_s> _userres;
 
-// NATIVE ACTIONS
+// 0.NATIVE ACTIONS
     void check_auth_change(name contract, name account, const binary_extension<name> & authorized_by);
     [[eosio::action]] void limitauthchg(const name & account, const std::vector<name> & allow_perms, const std::vector<name> & disallow_perms);
 
@@ -452,54 +461,31 @@ CONTRACT native : public eosio::contract {
       eosio::check(false, "the onerror action cannot be called directly");
     }
 
-// WHITELISTED NATIVE ACTIONS
+// 0.WHITELISTED NATIVE ACTIONS
     [[eosio::action]] void newaccount(const name & creator, const name & name, ignore<authority> owner, ignore<authority> active);
     [[eosio::action]] void setabi(const name & account, const std::vector<char> & abi, const binary_extension<std::string> & memo);
     [[eosio::action]] void setcode(const name & account, uint8_t vmtype, uint8_t vmversion, const std::vector<char> & code, const binary_extension<std::string> & memo){}
 
-// CONFIG ACTIONS
+// 1.CONFIG ACTIONS
     [[eosio::action]] void init(unsigned_int version, const symbol & core);
     [[eosio::action]] void setparams(const blockchain_parameters_t & params);
     [[eosio::action]] void wasmcfg(const name & settings);
-
     [[eosio::action]] void activate(const eosio::checksum256 & feature_digest);
-    [[eosio::action]] void updtrevision(uint8_t revision);
 
     [[eosio::action]] void setram(uint64_t max_ram_size);
     [[eosio::action]] void logsystemfee(const name & protocol, const asset & fee, const std::string & memo);
 
-// ADMIN ACTIONS
-      [[eosio::action]] void setwhitelist(const name & account, int8_t depth){
-          require_auth(get_self());
-          _whitelist whitelist(get_self(), get_self().value);
-
-          auto itr = whitelist.find(account.value);
-          if (itr == whitelist.end() && depth >= 1){
-            whitelist.emplace(get_self(), [&](auto & row){
-              row.account = account;
-              row.depth = depth;
-            });
-          } else {
-            if (depth >= 1){
-              whitelist.modify(itr, get_self(), [&](auto & row){
-                row.depth = depth;
-              });
-            } else {
-              whitelist.erase(itr);
-            }
-          }
-    }
+// 2.ADMIN ACTIONS
+    [[eosio::action]] void setwhitelist(const name & account, int8_t depth);
     [[eosio::action]] void setpriv(const name & account, uint8_t is_priv);
     [[eosio::action]] void rmvproducer(const name & producer);
-
     [[eosio::action]] void setacctram(const name & account, const std::optional<int64_t> & ram_bytes);
-    [[eosio::action]] void logramchange(const name & owner, int64_t bytes, int64_t ram_bytes);
 
-// USER / ACCOUNT ACTIONS
+// 3.USER ACTIONS
     [[eosio::action]] void bidname(const name & bidder, const name & newname, const asset & bid);
     [[eosio::action]] void bidrefund(const name & bidder, const name & newname);
 
-// TOKENOMICS / PRODUCERS / VOTING
+// 4.TOKENOMICS / PRODUCERS / VOTING
     [[eosio::action]] void onblock(ignore<block_header> header);
     [[eosio::action]] void claimrewards(const name & owner);
     [[eosio::action]] void unvest(const name account, const asset unvest_net_quantity, const asset unvest_cpu_quantity);
@@ -519,17 +505,33 @@ CONTRACT native : public eosio::contract {
     [[eosio::action]] void regproxy(const name proxy, bool isproxy);
 
   private:
-    using eosio::contract::contract;
 
 // GENERAL FUNCTIONS
-    native( name s, name code, datastream<const char*> ds );
-    ~native();
 
+    static _global_s get_default_parameters() {
+      _global_s dp;
+      get_blockchain_parameters(dp);
+      return dp;
+    }
 
-    static eosio_global_state get_default_parameters();
-    static eosio_global_state4 get_default_inflation_parameters();
-    symbol core_symbol()const;
-    void update_ram_supply();
+    system(name s, name code, datastream<const char*> ds)
+      :system(s,code,ds),
+      _voters(get_self(), get_self().value),
+      _producers(get_self(), get_self().value),
+      _finalizer_keys(get_self(), get_self().value),
+      _finalizers(get_self(), get_self().value),
+      _last_prop_finalizers(get_self(), get_self().value),
+      _fin_key_id_generator(get_self(), get_self().value),
+      _global(get_self(), get_self().value),
+      _schedules(get_self(), get_self().value)
+    {
+      _gstate = _global.exists() ? _global.get() : get_default_parameters();
+    }
+
+    ~system() {
+      _global.set(_gstate, get_self());
+    }
+
     void channel_to_system_fees(const name & from, const asset & amount);
     bool execute_next_schedule();
 
@@ -554,8 +556,6 @@ CONTRACT native : public eosio::contract {
     const std::vector<finalizer_auth_info>& get_last_proposed_finalizers();
     uint64_t get_next_finalizer_key_id();
     finalizers_table::const_iterator get_finalizer_itr( const name& finalizer_name ) const;
-
-
 
     void add_to_blockinfo_table(const eosio::checksum256& previous_block_id, const eosio::block_timestamp timestamp) const;
 

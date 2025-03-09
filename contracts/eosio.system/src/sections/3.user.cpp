@@ -1,5 +1,4 @@
-
-  void native::bidname(const name & bidder, const name & newname, const asset & bid){
+void system::bidname(const name & bidder, const name & newname, const asset & bid){
     /*
     require_auth( bidder );
     check( newname.suffix() == newname, "you can only bid on top-level suffix" );
@@ -48,9 +47,9 @@
         });
     }
     */
-  }
+}
 
-  void native::bidrefund(const name & bidder, const name & newname){
+void system::bidrefund(const name & bidder, const name & newname){
   /*
     bid_refund_table refunds_table(get_self(), newname.value);
     auto it = refunds_table.find( bidder.value );
@@ -60,4 +59,4 @@
     transfer_act.send( names_account, bidder, asset(it->amount), std::string("refund bid on name ")+(name{newname}).to_string() );
     refunds_table.erase( it );
   */
-  }
+}

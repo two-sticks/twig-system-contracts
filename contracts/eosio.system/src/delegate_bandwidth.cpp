@@ -23,7 +23,7 @@
    }
 
 
-   void native::update_user_resources( const name from, const name receiver, const asset stake_net_delta, const asset stake_cpu_delta )
+   void system::update_user_resources( const name from, const name receiver, const asset stake_net_delta, const asset stake_cpu_delta )
    {
       user_resources_table   totals_tbl( get_self(), receiver.value );
       auto tot_itr = totals_tbl.find( receiver.value );
@@ -70,7 +70,7 @@
       } // tot_itr can be invalid, should go out of scope
    }
 
-   int64_t native::update_voting_power( const name& voter, const asset& total_update )
+   int64_t system::update_voting_power( const name& voter, const asset& total_update )
    {
       auto voter_itr = _voters.find( voter.value );
       if( voter_itr == _voters.end() ) {
@@ -93,7 +93,7 @@
    }
 
 
-   void native::refund( const name& owner ) {
+   void system::refund( const name& owner ) {
       require_auth( owner );
 
       refunds_table refunds_tbl( get_self(), owner.value );
@@ -106,7 +106,7 @@
       refunds_tbl.erase( req );
    }
 
-   void native::unvest(const name account, const asset unvest_net_quantity, const asset unvest_cpu_quantity)
+   void system::unvest(const name account, const asset unvest_net_quantity, const asset unvest_cpu_quantity)
    {
       require_auth( get_self() );
 
@@ -131,4 +131,4 @@
       // retire unvested tokens
       token::retire_action retire_act{ token_account, { {"eosio"_n, active_permission} } };
       retire_act.send( unvesting, "unvest" );
-   } // unvest
+   }
