@@ -1,30 +1,24 @@
-#include <eosio.bios/eosio.bios.hpp>
-#include <eosio/crypto_bls_ext.hpp>
-
-#include <unordered_set>
+#include <eosio.bios.hpp>
 
 namespace eosiobios {
 
-void bios::setabi( name account, const std::vector<char>& abi ) {
-   abi_hash_table table(get_self(), get_self().value);
-   auto itr = table.find( account.value );
-   if( itr == table.end() ) {
-      table.emplace( account, [&]( auto& row ) {
+void bios::setabi(name account, const std::vector<char> & abi){
+   _abi_hash abi_hash_table(get_self(), get_self().value);
+   auto abi_hash_itr = abi_hash_table.find(account.value);
+   if(abi_hash_itr == abi_hash_table.end() ) {
+      abi_hash_table.emplace(account, [&](auto & row){
          row.owner = account;
-         row.hash  = eosio::sha256(const_cast<char*>(abi.data()), abi.size());
+         row.hash = eosio::sha256(const_cast<char*>(abi.data()), abi.size());
       });
    } else {
-      table.modify( itr, eosio::same_payer, [&]( auto& row ) {
+      abi_hash_table.modify(abi_hash_itr, eosio::same_payer, [&](auto & row){
          row.hash = eosio::sha256(const_cast<char*>(abi.data()), abi.size());
       });
    }
 }
 
-void bios::setfinalizer( const finalizer_policy& finalizer_policy ) {
-   // exensive checks are performed to make sure setfinalizer host function
-   // will never fail
-
-   require_auth( get_self() );
+void bios::setfinalizer(const finalizer_policy & finalizer_policy){
+   require_auth(get_self());
 
    check(finalizer_policy.finalizers.size() <= max_finalizers, "number of finalizers exceeds the maximum allowed");
    check(finalizer_policy.finalizers.size() > 0, "require at least one finalizer");
@@ -52,7 +46,7 @@ void bios::setfinalizer( const finalizer_policy& finalizer_policy ) {
 
    uint64_t weight_sum = 0;
 
-   for (const auto& f: finalizer_policy.finalizers) {
+   for (const auto & f : finalizer_policy.finalizers){
       check(f.description.size() <= max_finalizer_description_size, "Finalizer description greater than max allowed size");
 
       // basic key format checks
@@ -78,47 +72,47 @@ void bios::setfinalizer( const finalizer_policy& finalizer_policy ) {
       fin_policy.finalizers.emplace_back(eosio::finalizer_authority{f.description, f.weight, std::move(pk_vector)});
    }
 
-   check( weight_sum >= finalizer_policy.threshold && finalizer_policy.threshold > weight_sum / 2,
+   check(weight_sum >= finalizer_policy.threshold && finalizer_policy.threshold > weight_sum / 2,
           "Finalizer policy threshold must be greater than half of the sum of the weights, and less than or equal to the sum of the weights");
 
    set_finalizers(std::move(fin_policy));
 }
 
-void bios::onerror( ignore<uint128_t>, ignore<std::vector<char>> ) {
-   check( false, "the onerror action cannot be called directly" );
+void bios::onerror(ignore<uint128_t>, ignore<std::vector<char>>){
+   check(false, "the onerror action cannot be called directly");
 }
 
-void bios::setpriv( name account, uint8_t is_priv ) {
-   require_auth( get_self() );
-   set_privileged( account, is_priv );
+void bios::setpriv(name account, uint8_t is_priv){
+   require_auth(get_self());
+   set_privileged(account, is_priv);
 }
 
-void bios::setalimits( name account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight ) {
-   require_auth( get_self() );
-   set_resource_limits( account, ram_bytes, net_weight, cpu_weight );
+void bios::setalimits(name account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight){
+   require_auth(get_self());
+   set_resource_limits(account, ram_bytes, net_weight, cpu_weight);
 }
 
-void bios::setprods( const std::vector<eosio::producer_authority>& schedule ) {
-   require_auth( get_self() );
-   set_proposed_producers( schedule );
+void bios::setprods(const std::vector<eosio::producer_authority> & schedule){
+   require_auth(get_self());
+   set_proposed_producers(schedule);
 }
 
-void bios::setparams( const eosio::blockchain_parameters& params ) {
-   require_auth( get_self() );
-   set_blockchain_parameters( params );
+void bios::setparams(const eosio::blockchain_parameters & params){
+   require_auth(get_self());
+   set_blockchain_parameters(params);
 }
 
-void bios::reqauth( name from ) {
-   require_auth( from );
+void bios::reqauth(name from){
+   require_auth(from);
 }
 
-void bios::activate( const eosio::checksum256& feature_digest ) {
-   require_auth( get_self() );
-   preactivate_feature( feature_digest );
+void bios::activate(const eosio::checksum256 & feature_digest){
+   require_auth(get_self());
+   preactivate_feature(feature_digest);
 }
 
-void bios::reqactivated( const eosio::checksum256& feature_digest ) {
-   check( is_feature_activated( feature_digest ), "protocol feature is not activated" );
+void bios::reqactivated(const eosio::checksum256 & feature_digest){
+   check(is_feature_activated(feature_digest), "protocol feature is not activated");
 }
 
 }

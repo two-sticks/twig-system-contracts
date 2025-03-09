@@ -1,4 +1,4 @@
-# Reference contracts
+# TWIG System Contracts
 
 Reference contracts are a collection of contracts deployable to an [Antelope](https://github.com/AntelopeIO) blockchain which implements a lot of critical functionality that goes beyond what is provided by the base Antelope protocol.
 
@@ -36,91 +36,6 @@ The `main` branch contains the latest state of development; do not use this for 
 
 [CDT](https://github.com/AntelopeIO/cdt) is required to build contracts. Any operating systems supported by CDT is sufficient to build the reference contracts.
 
-To build and run the tests as well, [Spring](https://github.com/AntelopeIO/spring) is also required as a dependency, which may have its further restrictions on supported operating systems.
-## Building
-
-The build guide below will assume you are running Ubuntu 20.04. However, as mentioned above, other operating systems may also be supported.
-
-### Build or install CDT dependency
-
-The CDT dependency is required with a minimum version of 3.0.
-
-The easiest way to satisfy this dependency is to install CDT on your system through a package. Find the release of a compatible version of CDT from its [releases page](https://github.com/AntelopeIO/cdt/releases), download the package file appropriate for your OS from the attached assets, and install the package.
-
-Alternatively, you can build CDT from source. Please refer to the guide in the [CDT README](https://github.com/AntelopeIO/cdt#building-from-source) for instructions on how to do this. If you choose to go with building CDT from source, please keep the path to the build directory in the shell environment variable `CDT_BUILD_PATH` for later use when building the reference contracts.
-
-### Optionally build Spring dependency
-
-The Spring dependency is optional. It is only needed if you wish to also build the tests using the `BUILD_TESTS` CMake flag.
-
-Unfortunately, it is not currently possible to satisfy the contract testing dependencies through the Spring packages made available from the [Spring releases page](https://github.com/AntelopeIO/spring/releases). So if you want to build the contract tests, you will first need to build Spring from source.
-
-Please refer to the guide in the [Spring README](https://github.com/AntelopeIO/spring#building-from-source) for instructions on how to do this. If you choose to go with building Spring from source, please keep the path to the build directory in the shell environment variable `SPRING_BUILD_PATH` for later use when building the reference contracts.
-
-### Build reference contracts
-
-Beyond CDT and optionally Spring (if also building the tests), no additional dependencies are required to build the reference contracts.
-
-The instructions below assume you are building the reference contracts with tests, have already built Spring from source, and have the CDT dependency installed on your system. For some other configurations, expand the hidden panels placed lower within this section.
-
-For all configurations, you should first `cd` into the directory containing cloned reference contracts repository.
-
-Build reference contracts with tests using Spring built from source and with installed CDT package:
-
-```
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -Dspring_DIR="${SPRING_BUILD_PATH}/lib/cmake/spring" ..
-make -j $(nproc)
-```
-
-**Note:** `CMAKE_BUILD_TYPE` has no impact on the WASM files generated for the contracts. It only impacts how the test binaries are built. Use `-DCMAKE_BUILD_TYPE=Debug` if you want to create test binaries that you can debug.
-
-<details>
-<summary>Build reference contracts with tests using Spring and CDT both built from source</summary>
-
-```
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -Dcdt_DIR="${CDT_BUILD_PATH}/lib/cmake/cdt" -Dspring_DIR="${SPRING_BUILD_PATH}/lib/cmake/spring" ..
-make -j $(nproc)
-```
-</details>
-
-<details>
-<summary>Build reference contracts without tests and with CDT build from source</summary>
-
-```
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -Dcdt_DIR="${CDT_BUILD_PATH}/lib/cmake/cdt" ..
-make -j $(nproc)
-```
-
-</details>
-
-#### Supported CMake options
-
-The following is a list of custom CMake options supported in building the reference contracts (default values are shown below):
-
-```
--DBUILD_TESTS=OFF                       Do not build the tests
-
--DSYSTEM_CONFIGURABLE_WASM_LIMITS=ON    Enable use of the CONFIGURABLE_WASM_LIMITS
-                                        protocol feature
-
--DSYSTEM_BLOCKCHAIN_PARAMETERS=ON       Enable use of the BLOCKCHAIN_PARAMETERS
-                                        protocol feature
-```
-
-### Running tests
-
-Assuming you built with `BUILD_TESTS=ON`, you can run the tests.
-
-```
-cd build/tests
-ctest -j $(nproc)
-```
 
 ## License
 

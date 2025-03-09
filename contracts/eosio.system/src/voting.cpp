@@ -1,30 +1,5 @@
-#include <eosio/crypto.hpp>
-#include <eosio/datastream.hpp>
-#include <eosio/eosio.hpp>
-#include <eosio/multi_index.hpp>
-#include <eosio/permission.hpp>
-#include <eosio/privileged.hpp>
-#include <eosio/serialize.hpp>
-#include <eosio/singleton.hpp>
 
-#include <eosio.system/eosio.system.hpp>
-#include <eosio.token/eosio.token.hpp>
-
-#include <type_traits>
-#include <limits>
-#include <set>
-#include <algorithm>
-#include <cmath>
-
-namespace eosiosystem {
-
-   using eosio::const_mem_fun;
-   using eosio::current_time_point;
-   using eosio::indexed_by;
-   using eosio::microseconds;
-   using eosio::singleton;
-
-   void system_contract::register_producer( const name& producer, const eosio::block_signing_authority& producer_authority, const std::string& url, uint16_t location ) {
+   void native::register_producer( const name& producer, const eosio::block_signing_authority& producer_authority, const std::string& url, uint16_t location ) {
       auto prod = _producers.find( producer.value );
       const auto ct = current_time_point();
 
@@ -76,14 +51,14 @@ namespace eosiosystem {
 
    }
 
-   void system_contract::regproducer( const name& producer, const eosio::public_key& producer_key, const std::string& url, uint16_t location ) {
+   void native::regproducer( const name& producer, const eosio::public_key& producer_key, const std::string& url, uint16_t location ) {
       require_auth( producer );
       check( url.size() < 512, "url too long" );
 
       register_producer( producer, convert_to_block_signing_authority( producer_key ), url, location );
    }
 
-   void system_contract::regproducer2( const name& producer, const eosio::block_signing_authority& producer_authority, const std::string& url, uint16_t location ) {
+   void native::regproducer2( const name& producer, const eosio::block_signing_authority& producer_authority, const std::string& url, uint16_t location ) {
       require_auth( producer );
       check( url.size() < 512, "url too long" );
 
@@ -94,7 +69,7 @@ namespace eosiosystem {
       register_producer( producer, producer_authority, url, location );
    }
 
-   void system_contract::unregprod( const name& producer ) {
+   void native::unregprod( const name& producer ) {
       require_auth( producer );
 
       const auto& prod = _producers.get( producer.value, "producer not found" );
@@ -103,7 +78,7 @@ namespace eosiosystem {
       });
    }
 
-   void system_contract::update_elected_producers( const block_timestamp& block_time ) {
+   void native::update_elected_producers( const block_timestamp& block_time ) {
       _gstate.last_producer_schedule_update = block_time;
 
       auto idx = _producers.get_index<"prototalvote"_n>();
@@ -174,7 +149,7 @@ namespace eosiosystem {
       return double(staked) * std::pow( 2, weight );
    }
 
-   double system_contract::update_total_votepay_share( const time_point& ct,
+   double native::update_total_votepay_share( const time_point& ct,
                                                        double additional_shares_delta,
                                                        double shares_rate_delta )
    {
@@ -202,7 +177,7 @@ namespace eosiosystem {
       return _gstate2.total_producer_votepay_share;
    }
 
-   double system_contract::update_producer_votepay_share( const producers_table2::const_iterator& prod_itr,
+   double native::update_producer_votepay_share( const producers_table2::const_iterator& prod_itr,
                                                           const time_point& ct,
                                                           double shares_rate,
                                                           bool reset_to_zero )
@@ -225,7 +200,7 @@ namespace eosiosystem {
       return new_votepay_share;
    }
 
-   void system_contract::voteproducer( const name& voter_name, const name& proxy, const std::vector<name>& producers ) {
+   void native::voteproducer( const name& voter_name, const name& proxy, const std::vector<name>& producers ) {
       if ( voter_name == "b1"_n ) {
          require_auth("eosio"_n);
       } else {
@@ -236,14 +211,14 @@ namespace eosiosystem {
       update_votes( voter_name, proxy, producers, true );
    }
 
-   void system_contract::voteupdate( const name& voter_name ) {
+   void native::voteupdate( const name& voter_name ) {
       auto voter = _voters.find( voter_name.value );
       check( voter != _voters.end(), "no voter found" );
 
       int64_t new_staked = 0;
-      
+
       updaterex(voter_name);
-      
+
       // get rex bal
       auto rex_itr = _rexbalance.find( voter_name.value );
       if( rex_itr != _rexbalance.end() && rex_itr->rex_balance.amount > 0 ) {
@@ -263,12 +238,12 @@ namespace eosiosystem {
             av.staked = new_staked;
          });
       }
-      
+
       update_votes(voter_name, voter->proxy, voter->producers, true);
    } // voteupdate
 
 
-   void system_contract::update_votes( const name& voter_name, const name& proxy, const std::vector<name>& producers, bool voting ) {
+   void native::update_votes( const name& voter_name, const name& proxy, const std::vector<name>& producers, bool voting ) {
       //validate input
       if ( proxy ) {
          check( producers.size() == 0, "cannot vote for producers and proxy at same time" );
@@ -393,7 +368,7 @@ namespace eosiosystem {
       });
    }
 
-   void system_contract::regproxy( const name& proxy, bool isproxy ) {
+   void native::regproxy( const name& proxy, bool isproxy ) {
       require_auth( proxy );
 
       auto pitr = _voters.find( proxy.value );
@@ -412,7 +387,7 @@ namespace eosiosystem {
       }
    }
 
-   void system_contract::propagate_weight_change( const voter_info& voter ) {
+   void native::propagate_weight_change( const voter_info& voter ) {
       check( !voter.proxy || !voter.is_proxy, "account registered as a proxy is not allowed to use a proxy" );
       double new_weight = stake2vote( voter.staked );
       if ( voter.is_proxy ) {
@@ -471,4 +446,4 @@ namespace eosiosystem {
       );
    }
 
-} /// namespace eosiosystem
+}

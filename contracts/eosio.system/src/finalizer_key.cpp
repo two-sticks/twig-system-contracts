@@ -1,8 +1,4 @@
-#include <eosio.system/eosio.system.hpp>
 
-#include <eosio/eosio.hpp>
-
-namespace eosiosystem {
    finalizer_auth_info::finalizer_auth_info(const finalizer_info& finalizer)
       : key_id(finalizer.active_key_id)
       , fin_authority( eosio::finalizer_authority{
@@ -13,7 +9,7 @@ namespace eosiosystem {
    }
 
    // Returns true if nodeos has transitioned to Savanna (having last proposed finalizers)
-   bool system_contract::is_savanna_consensus() {
+   bool native::is_savanna_consensus() {
       return !get_last_proposed_finalizers().empty();
    }
 
@@ -35,7 +31,7 @@ namespace eosiosystem {
    }
 
    // Validates finalizer and returns the iterator to finalizers table
-   finalizers_table::const_iterator system_contract::get_finalizer_itr( const name& finalizer_name ) const {
+   finalizers_table::const_iterator native::get_finalizer_itr( const name& finalizer_name ) const {
       // Check finalizer has registered keys
       auto finalizer_itr = _finalizers.find(finalizer_name.value);
       check( finalizer_itr != _finalizers.end(), "finalizer " + finalizer_name.to_string() + " has not registered any finalizer keys" );
@@ -48,7 +44,7 @@ namespace eosiosystem {
    // from `proposed_finalizers` and calls eosio::set_finalizers host function
    // Note: this function may never fail, as it can be called by update_elected_producers,
    // and in turn by onblock.
-   void system_contract::set_proposed_finalizers( std::vector<finalizer_auth_info> proposed_finalizers ) {
+   void native::set_proposed_finalizers( std::vector<finalizer_auth_info> proposed_finalizers ) {
       // Sort proposed_finalizers by finalizer key ID
       std::sort( proposed_finalizers.begin(), proposed_finalizers.end(), []( const finalizer_auth_info& lhs, const finalizer_auth_info& rhs ) {
          return lhs.key_id < rhs.key_id;
@@ -98,7 +94,7 @@ namespace eosiosystem {
    }
 
    // Returns last proposed finalizers
-   const std::vector<finalizer_auth_info>& system_contract::get_last_proposed_finalizers() {
+   const std::vector<finalizer_auth_info>& native::get_last_proposed_finalizers() {
       if( !_last_prop_finalizers_cached.has_value() ) {
          const auto finalizers_itr = _last_prop_finalizers.begin();
          if( finalizers_itr == _last_prop_finalizers.end() ) {
@@ -113,7 +109,7 @@ namespace eosiosystem {
 
    // Generates an ID for a new finalizer key to be used in finalizer_keys table.
    // It may never be reused.
-   uint64_t system_contract::get_next_finalizer_key_id() {
+   uint64_t native::get_next_finalizer_key_id() {
       uint64_t next_id = 0;
       auto itr = _fin_key_id_generator.begin();
 
@@ -138,7 +134,7 @@ namespace eosiosystem {
    * @pre  A sufficient numner of the top 21 block producers have registered a finalizer key
    * @post is_savanna_consensus returns true
    */
-   void system_contract::switchtosvnn() {
+   void native::switchtosvnn() {
       require_auth(get_self());
 
       check(!is_savanna_consensus(), "switchtosvnn can be run only once");
@@ -182,7 +178,7 @@ namespace eosiosystem {
     * @pre `proof_of_possession` must be a valid of proof of possession signature
     * @pre Authority of `finalizer_name` to register. `linkauth` may be used to allow a lower authrity to exectute this action.
     */
-   void system_contract::regfinkey( const name& finalizer_name, const std::string& finalizer_key, const std::string& proof_of_possession) {
+   void native::regfinkey( const name& finalizer_name, const std::string& finalizer_key, const std::string& proof_of_possession) {
       require_auth( finalizer_name );
 
       auto producer = _producers.find( finalizer_name.value );
@@ -236,7 +232,7 @@ namespace eosiosystem {
     * @pre `finalizer_key` must be a registered finalizer key in base64url format
     * @pre Authority of `finalizer_name`
     */
-   void system_contract::actfinkey( const name& finalizer_name, const std::string& finalizer_key ) {
+   void native::actfinkey( const name& finalizer_name, const std::string& finalizer_key ) {
       require_auth( finalizer_name );
 
       const auto finalizer = get_finalizer_itr(finalizer_name);
@@ -293,7 +289,7 @@ namespace eosiosystem {
     * @pre `finalizer_key` must not be active, unless it is the last registered finalizer key
     * @pre Authority of `finalizer_name`
     * */
-   void system_contract::delfinkey( const name& finalizer_name, const std::string& finalizer_key ) {
+   void native::delfinkey( const name& finalizer_name, const std::string& finalizer_key ) {
       require_auth( finalizer_name );
 
       auto finalizer = get_finalizer_itr(finalizer_name);
@@ -306,7 +302,7 @@ namespace eosiosystem {
 
       // Check the key belongs to the finalizer
       check(fin_key_itr->finalizer_name == name(finalizer_name), "finalizer key " + finalizer_key + " was not registered by the finalizer " + finalizer_name.to_string() );
-      
+
       if( fin_key_itr->is_active(finalizer->active_key_id) ) {
          check( finalizer->finalizer_key_count == 1, "cannot delete an active key unless it is the last registered finalizer key, has " + std::to_string(finalizer->finalizer_key_count) + " keys");
       }
@@ -325,4 +321,3 @@ namespace eosiosystem {
       // Remove the key from finalizer_keys table
       idx.erase( fin_key_itr );
    }
-} /// namespace eosiosystem

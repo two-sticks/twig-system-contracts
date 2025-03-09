@@ -1,13 +1,5 @@
-#include <eosio.system/eosio.system.hpp>
-#include <eosio.token/eosio.token.hpp>
 
-namespace eosiosystem {
-
-   using eosio::current_time_point;
-   using eosio::microseconds;
-   using eosio::token;
-
-   void system_contract::onblock( ignore<block_header> ) {
+   void native::onblock( ignore<block_header> ) {
       using namespace eosio;
 
       require_auth(get_self());
@@ -67,7 +59,7 @@ namespace eosiosystem {
                channel_to_system_fees( names_account, asset( highest->high_bid, core_symbol() ) );
 
                // logging
-               system_contract::logsystemfee_action logsystemfee_act{ get_self(), { {get_self(), active_permission} } };
+               native::logsystemfee_action logsystemfee_act{ get_self(), { {get_self(), active_permission} } };
                logsystemfee_act.send( names_account, asset( highest->high_bid, core_symbol() ), "buy name" );
 
                idx.modify( highest, same_payer, [&]( auto& b ){
@@ -78,7 +70,7 @@ namespace eosiosystem {
       }
    }
 
-   void system_contract::claimrewards( const name& owner ) {
+   void native::claimrewards( const name& owner ) {
       require_auth( owner );
 
       execute_next_schedule();
@@ -212,4 +204,3 @@ namespace eosiosystem {
       }
    }
 
-} //namespace eosiosystem
