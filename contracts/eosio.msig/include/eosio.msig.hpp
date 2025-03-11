@@ -11,37 +11,10 @@ namespace eosio {
       public:
          using contract::contract;
 
-         /**
-          * Propose action, creates a proposal containing one transaction.
-          * Allows an account `proposer` to make a proposal `proposal_name` which has `requested`
-          * permission levels expected to approve the proposal, and if approved by all expected
-          * permission levels then `trx` transaction can we executed by this proposal.
-          * The `proposer` account is authorized and the `trx` transaction is verified if it was
-          * authorized by the provided keys and permissions, and if the proposal name doesn’t
-          * already exist; if all validations pass the `proposal_name` and `trx` trasanction are
-          * saved in the proposals table and the `requested` permission levels to the
-          * approvals table (for the `proposer` context). Storage changes are billed to `proposer`.
-          *
-          * @param proposer - The account proposing a transaction
-          * @param proposal_name - The name of the proposal (should be unique for proposer)
-          * @param requested - Permission levels expected to approve the proposal
-          * @param trx - Proposed transaction
-          */
          [[eosio::action]]
          void propose(name proposer, name proposal_name,
                       std::vector<permission_level> requested, ignore<transaction> trx);
-         /**
-          * Approve action approves an existing proposal. Allows an account, the owner of `level` permission, to approve a proposal `proposal_name`
-          * proposed by `proposer`. If the proposal's requested approval list contains the `level`
-          * permission then the `level` permission is moved from internal `requested_approvals` list to
-          * internal `provided_approvals` list of the proposal, thus persisting the approval for
-          * the `proposal_name` proposal. Storage changes are billed to `proposer`.
-          *
-          * @param proposer - The account proposing a transaction
-          * @param proposal_name - The name of the proposal (should be unique for proposer)
-          * @param level - Permission level approving the transaction
-          * @param proposal_hash - Transaction's checksum
-          */
+
          [[eosio::action]]
          void approve( name proposer, name proposal_name, permission_level level,
                        const eosio::binary_extension<eosio::checksum256>& proposal_hash );
@@ -128,9 +101,6 @@ namespace eosio {
    struct [[eosio::table, eosio::contract("eosio.msig")]] approvals_info {
       uint8_t                 version = 1;
       name                    proposal_name;
-      //requested approval doesn't need to contain time, but we want requested approval
-      //to be of exactly the same size as provided approval, in this case approve/unapprove
-      //doesn't change serialized data size. So, we use the same type.
       std::vector<approval>   requested_approvals;
       std::vector<approval>   provided_approvals;
       uint64_t primary_key()const { return proposal_name.value; }
@@ -146,4 +116,4 @@ namespace eosio {
 
       typedef eosio::multi_index< "invals"_n, invalidation > invalidations;
    };
-} /// namespace eosio
+}
