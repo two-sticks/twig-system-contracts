@@ -1,4 +1,71 @@
-void system::bidname(const name & bidder, const name & newname, const asset & bid){
+void systemcore::voteproducer(const name & voter_name, const name & proxy, const std::vector<name> & producers)
+{
+  if (voter_name == name("b1")){
+    require_auth(get_self());
+  } else {
+    require_auth(voter_name);
+  }
+
+  //vote_stake_updater(voter_name);
+  update_votes(voter_name, proxy, producers, true);
+}
+
+void systemcore::voteupdate(const name & voter_name)
+{
+  _voters voters(get_self(), get_self().value);
+  auto voter = voters.require_find(voter_name.value, "no voter found");
+
+  int64_t new_staked = 0;
+
+  /*
+  updaterex(voter_name);
+
+  // get rex bal
+  auto rex_itr = _rexbalance.find( voter_name.value );
+  if( rex_itr != _rexbalance.end() && rex_itr->rex_balance.amount > 0 ) {
+      new_staked += rex_itr->vote_stake.amount;
+  }
+  del_bandwidth_table     del_tbl( get_self(), voter_name.value );
+
+  auto del_itr = del_tbl.begin();
+  while(del_itr != del_tbl.end()) {
+      new_staked += del_itr->net_weight.amount + del_itr->cpu_weight.amount;
+      del_itr++;
+  }
+
+  if( voter->staked != new_staked){
+      // check if staked and new_staked are different and only
+      _voters.modify( voter, same_payer, [&]( auto& av ) {
+        av.staked = new_staked;
+      });
+  }
+
+  update_votes(voter_name, voter->proxy, voter->producers, true);
+  */
+}
+
+void systemcore::regproxy(const name & proxy, bool isproxy)
+{
+  require_auth(proxy);
+
+  _voters voters(get_self(), get_self().value);
+  auto pitr = voters.find(proxy.value);
+  if (pitr != voters.end()){
+    check(isproxy != pitr->is_proxy, "action has no effect");
+    check(!isproxy || !pitr->proxy, "account that uses a proxy is not allowed to become a proxy");
+    voters.modify(pitr, same_payer, [&](auto & row){
+      row.is_proxy = isproxy;
+    });
+  } else {
+    voters.emplace(proxy, [&](auto & row){
+      row.owner  = proxy;
+      row.is_proxy = isproxy;
+    });
+  }
+}
+
+void systemcore::bidname(const name & bidder, const name & newname, const asset & bid)
+{
     /*
     require_auth( bidder );
     check( newname.suffix() == newname, "you can only bid on top-level suffix" );
@@ -49,7 +116,8 @@ void system::bidname(const name & bidder, const name & newname, const asset & bi
     */
 }
 
-void system::bidrefund(const name & bidder, const name & newname){
+void systemcore::bidrefund(const name & bidder, const name & newname)
+{
   /*
     bid_refund_table refunds_table(get_self(), newname.value);
     auto it = refunds_table.find( bidder.value );

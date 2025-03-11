@@ -1,6 +1,6 @@
 {
   "main": "src/eosio.system.cpp",
-  "contract": "native",
+  "contract": "systemcore",
   "include": "",
   "resource": "",
   "cdt": "v1.7.0",

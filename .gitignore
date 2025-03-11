@@ -35,4 +35,4 @@ build/*
 .DS_Store
 .vscode
 
-*.eosproj
+.eosproj

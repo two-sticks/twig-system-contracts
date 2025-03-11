@@ -30,9 +30,8 @@
 
 #include <eosio.token.hpp>
 
-
 using namespace eosio;
-CONTRACT system : public eosio::contract {
+CONTRACT systemcore : public eosio::contract {
   public:
     using eosio::contract::contract;
 
@@ -56,6 +55,7 @@ CONTRACT system : public eosio::contract {
     static constexpr int64_t  useconds_per_day = int64_t(seconds_per_day) * 1000'000ll;
     static constexpr int64_t  useconds_per_hour = int64_t(seconds_per_hour) * 1000'000ll;
     static constexpr uint32_t blocks_per_day = seconds_per_day;
+    static constexpr uint32_t blocks_per_minute = blocks_per_day / 24 / 60;
 
     static constexpr int64_t  inflation_precision = 100; // 2 decimals
     static constexpr int64_t  default_annual_rate = 500; // 5% annual rate
@@ -84,19 +84,18 @@ CONTRACT system : public eosio::contract {
           return ( flags & ~static_cast<F>(field) );
     }
 
+// STRUCTS //
     #ifdef SYSTEM_BLOCKCHAIN_PARAMETERS
       struct blockchain_parameters_v1 : eosio::blockchain_parameters
       {
-          eosio::binary_extension<uint32_t> max_action_return_value_size;
-          EOSLIB_SERIALIZE_DERIVED( blockchain_parameters_v1, eosio::blockchain_parameters,
-                                    (max_action_return_value_size) )
+        eosio::binary_extension<uint32_t> max_action_return_value_size;
+        EOSLIB_SERIALIZE_DERIVED(blockchain_parameters_v1, eosio::blockchain_parameters, (max_action_return_value_size))
       };
       using blockchain_parameters_t = blockchain_parameters_v1;
     #else
       using blockchain_parameters_t = eosio::blockchain_parameters;
     #endif
 
-// STRUCTS //
     struct permission_level_weight
     {
       permission_level permission;
@@ -186,79 +185,11 @@ CONTRACT system : public eosio::contract {
 
 // TABLES //
 
-    struct [[eosio::table("blockinfo")]] _blockinfo_s
-    {
-      uint8_t version = 0;
-      uint32_t block_height;
-      time_point block_timestamp;
-
-      uint64_t primary_key() const { return block_height; };
-
-      EOSLIB_SERIALIZE(_blockinfo_s, (version)(block_height)(block_timestamp))
-    };
-    typedef multi_index<name("blockinfo"), _blockinfo_s> _blockinfo;
-
-    struct [[eosio::table("abihash")]] _abihash_s
-    {
-      name owner;
-      checksum256 hash;
-      uint64_t primary_key()const { return owner.value; };
-
-      EOSLIB_SERIALIZE(_abihash_s, (owner)(hash))
-    };
-
-    struct [[eosio::table("whitelist")]] _whitelist_s
-    {
-      name account;
-      uint8_t depth;
-      uint64_t primary_key() const { return account.value; };
-
-      EOSLIB_SERIALIZE( _whitelist_s, (account)(depth) )
-    };
-    typedef multi_index<name("whitelist"), _whitelist_s> _whitelist;
-
-    struct [[eosio::table("limitauthchg")]] _limitauthchg_s
-    {
-      uint8_t version = 0;
-      name account;
-      std::vector<name> allow_perms;
-      std::vector<name> disallow_perms;
-
-      uint64_t primary_key() const { return account.value; };
-
-      EOSLIB_SERIALIZE(_limitauthchg_s, (version)(account)(allow_perms)(disallow_perms))
-    };
-    typedef multi_index<name("limitauthchg"), _limitauthchg_s> _limitauthchg;
-
-    struct [[eosio::table("namebids")]] _namebids_s
-    {
-      name newname;
-      name high_bidder;
-      int64_t high_bid = 0; ///< negative high_bid == closed auction waiting to be claimed
-      time_point last_bid_time;
-
-      uint64_t primary_key() const { return newname.value; };
-      uint64_t by_high_bid() const { return static_cast<uint64_t>(-high_bid); };
-    };
-    typedef multi_index<name("namebids"), _namebids_s,
-      indexed_by<name("highbid"),
-      const_mem_fun<_namebids_s, uint64_t, &_namebids_s::by_high_bid>>
-    >_namebids;
-
-    struct [[eosio::table("bidrefunds")]] _bidrefunds_s
-    {
-      name bidder;
-      asset amount;
-
-      uint64_t primary_key()const { return bidder.value; };
-    };
-    typedef multi_index<name("bidrefunds"), _bidrefunds_s> _bidrefunds;
-
     struct [[eosio::table("global")]] _global_s : eosio::blockchain_parameters
     {
-      uint64_t free_ram()const { return max_ram_size - total_ram_bytes_reserved; }
+      uint64_t free_ram()const { return max_ram_size - total_ram_bytes_reserved; };
 
-      uint64_t max_ram_size = 512ll* 1024 * 1024 * 1024* 1024 * 1024 * 1024;
+      uint64_t max_ram_size = 512ll* 1024 * 1024 * 1024* 1024 * 1024;
       uint64_t total_ram_bytes_reserved = 0;
       int64_t total_ram_stake = 0;
 
@@ -276,6 +207,37 @@ CONTRACT system : public eosio::contract {
     };
     typedef singleton<name("global"), _global_s> _global;
 
+    struct [[eosio::table("blockinfo")]] _blockinfo_s
+    {
+      uint8_t version = 0;
+      uint32_t block_height;
+      time_point block_timestamp;
+
+      uint64_t primary_key() const { return block_height; };
+
+      EOSLIB_SERIALIZE(_blockinfo_s, (version)(block_height)(block_timestamp))
+    };
+    typedef multi_index<name("blockinfo"), _blockinfo_s> _blockinfo;
+
+    struct [[eosio::table("whitelist")]] _whitelist_s
+    {
+      name account;
+      uint8_t depth;
+      uint64_t primary_key() const { return account.value; };
+
+      EOSLIB_SERIALIZE( _whitelist_s, (account)(depth) )
+    };
+    typedef multi_index<name("whitelist"), _whitelist_s> _whitelist;
+
+    struct [[eosio::table("abihash")]] _abihash_s
+    {
+      name owner;
+      checksum256 hash;
+      uint64_t primary_key()const { return owner.value; };
+
+      EOSLIB_SERIALIZE(_abihash_s, (owner)(hash))
+    };
+
     struct [[eosio::table("schedules")]] _schedules_s
     {
       time_point_sec start_time;
@@ -287,10 +249,6 @@ CONTRACT system : public eosio::contract {
     };
     typedef multi_index<name("schedules"), _schedules_s> _schedules;
 
-    inline eosio::block_signing_authority convert_to_block_signing_authority(const eosio::public_key& producer_key){
-      return eosio::block_signing_authority_v0{ .threshold = 1, .keys = {{producer_key, 1}} };
-    }
-
     struct [[eosio::table("producers")]] _producers_s
     {
       name owner;
@@ -301,7 +259,7 @@ CONTRACT system : public eosio::contract {
       uint32_t unpaid_blocks = 0;
       time_point last_claim_time;
       uint16_t location = 0;
-      eosio::block_signing_authority producer_authority;
+      eosio::binary_extension<eosio::block_signing_authority> producer_authority;
 
       uint64_t primary_key() const { return owner.value; };
       double by_votes() const { return is_active ? -total_votes : total_votes; };
@@ -309,24 +267,53 @@ CONTRACT system : public eosio::contract {
       void deactivate() { producer_key = public_key(); producer_authority.reset(); is_active = false; };
 
       eosio::block_signing_authority get_producer_authority() const {
-         if(producer_authority.has_value()){
-            bool zero_threshold = std::visit( [](auto&& auth ) -> bool {
-               return (auth.threshold == 0);
-            }, *producer_authority );
-            if( !zero_threshold ) return *producer_authority;
-         }
-         return convert_to_block_signing_authority( producer_key );
+        if(producer_authority.has_value()){
+          bool zero_threshold = std::visit( [](auto&& auth ) -> bool {
+              return (auth.threshold == 0);
+          }, *producer_authority );
+          if( !zero_threshold ) return *producer_authority;
+        }
+        return eosio::block_signing_authority_v0{ .threshold = 1, .keys = {{producer_key, 1}} };
+      }
+
+      template<typename DataStream>
+      friend DataStream& operator << (DataStream & ds, const _producers_s & t){
+         ds << t.owner
+            << t.total_votes
+            << t.producer_key
+            << t.is_active
+            << t.url
+            << t.unpaid_blocks
+            << t.last_claim_time
+            << t.location;
+
+         if( !t.producer_authority.has_value() ) return ds;
+
+         return ds << t.producer_authority;
+      }
+
+      template<typename DataStream>
+      friend DataStream& operator >> (DataStream & ds, _producers_s & t){
+         return ds >> t.owner
+                   >> t.total_votes
+                   >> t.producer_key
+                   >> t.is_active
+                   >> t.url
+                   >> t.unpaid_blocks
+                   >> t.last_claim_time
+                   >> t.location
+                   >> t.producer_authority;
       }
     };
     typedef multi_index<name("producers"), _producers_s,
-      indexed_by<name("prototalvote"),
-      const_mem_fun<_producers_s, double, &_producers_s::by_votes>>
+      indexed_by<name("prototalvote"), const_mem_fun<_producers_s, double, &_producers_s::by_votes>>
     >_producers;
 
-    struct [[eosio::table("finkeys")]] _finkeys_s {
-      uint64_t          id;                   // automatically generated ID for the key in the table
-      name              finalizer_name;       // name of the finalizer owning the key
-      std::string       finalizer_key;        // finalizer key in base64url format
+    struct [[eosio::table("finkeys")]] _finkeys_s
+    {
+      uint64_t id;
+      name finalizer_name;
+      std::string finalizer_key;
       std::vector<char> finalizer_key_binary; // finalizer key in binary format in Affine little endian non-montgomery g1
 
       uint64_t primary_key() const { return id; };
@@ -336,72 +323,86 @@ CONTRACT system : public eosio::contract {
       // There is no need to store the hash key to avoid re-computation,
       // which only happens if the table row is modified. There won't be any
       // modification of the table rows of; it may only be removed.
-      checksum256 by_fin_key() const { return eosio::sha256(finalizer_key_binary.data(), finalizer_key_binary.size()); }
+      checksum256 by_fin_key() const { return eosio::sha256(finalizer_key_binary.data(), finalizer_key_binary.size()); };
 
-      bool is_active(uint64_t finalizer_active_key_id) const { return id == finalizer_active_key_id ; }
+      bool is_active(uint64_t finalizer_active_key_id) const { return id == finalizer_active_key_id; };
     };
 
     typedef multi_index<
-        name("finkeys"), _finkeys_s,
-        indexed_by<name("byfinname"), const_mem_fun<_finkeys_s, uint64_t, &_finkeys_s::by_fin_name>>,
-        indexed_by<name("byfinkey"), const_mem_fun<_finkeys_s, checksum256, &_finkeys_s::by_fin_key>>
+      name("finkeys"), _finkeys_s,
+      indexed_by<name("byfinname"), const_mem_fun<_finkeys_s, uint64_t, &_finkeys_s::by_fin_name>>,
+      indexed_by<name("byfinkey"), const_mem_fun<_finkeys_s, checksum256, &_finkeys_s::by_fin_key>>
     >_finkeys;
 
-   // finalizer_info stores information about a finalizer.
-  struct [[eosio::table("finalizers")]] finalizer_info {
-      name              finalizer_name;           // finalizer's name
-      uint64_t          active_key_id;            // finalizer's active finalizer key's id in finalizer_keys_table, for fast finding key information
-      std::vector<char> active_key_binary;        // finalizer's active finalizer key's binary format in Affine little endian non-montgomery g1
-      uint32_t          finalizer_key_count = 0;  // number of finalizer keys registered by this finalizer
+    struct [[eosio::table("finalizers")]] _finalizers_s
+    {
+      name finalizer_name;
+      uint64_t active_key_id; // finalizer's active finalizer key's id in finalizer_keys_table, for fast finding key information
+      std::vector<char> active_key_binary; // finalizer's active finalizer key's binary format in Affine little endian non-montgomery g1
+      uint32_t finalizer_key_count = 0; // number of finalizer keys registered by this finalizer
 
-      uint64_t primary_key() const { return finalizer_name.value; }
-   };
-  typedef multi_index< "finalizers"_n, finalizer_info > finalizers_table;
+      uint64_t primary_key() const { return finalizer_name.value; };
 
-   // finalizer_auth_info stores a finalizer's key id and its finalizer authority
-  struct finalizer_auth_info {
+      EOSLIB_SERIALIZE(_finalizers_s, (finalizer_name)(active_key_id)(active_key_binary)(finalizer_key_count))
+    };
+    typedef multi_index<name("finalizers"), _finalizers_s> _finalizers;
+
+    struct finalizer_auth_info {
+      uint64_t key_id;
+      eosio::finalizer_authority fin_authority;
+
       finalizer_auth_info() = default;
-      explicit finalizer_auth_info(const finalizer_info& finalizer);
+      explicit finalizer_auth_info(const _finalizers_s & finalizer) :
+        key_id(finalizer.active_key_id),
+        fin_authority(eosio::finalizer_authority{
+          .description = finalizer.finalizer_name.to_string(),
+          .weight = 1,
+          .public_key = finalizer.active_key_binary})
+        {};
 
-      uint64_t                   key_id;        // A finalizer's key ID in finalizer_keys_table
-      eosio::finalizer_authority fin_authority; // The finalizer's finalizer_authority
-
-      bool operator==(const finalizer_auth_info& other) const {
-         // Weight and description can never be changed by a user.
-         // They are not considered here.
-         return key_id == other.key_id &&
-                fin_authority.public_key == other.fin_authority.public_key;
+      bool operator==(const finalizer_auth_info & other) const {
+        return key_id == other.key_id && fin_authority.public_key == other.fin_authority.public_key;
       };
 
-      EOSLIB_SERIALIZE( finalizer_auth_info, (key_id)(fin_authority) )
-   };
+      EOSLIB_SERIALIZE(finalizer_auth_info, (key_id)(fin_authority))
+    };
 
-   // A single entry storing information about last proposed finalizers.
-   // Should avoid  using the global singleton pattern as it unnecessarily
-   // serializes data at construction/desstruction of system_contract,
-   // even if the data is not used.
-  struct [[eosio::table("lastpropfins")]] last_prop_finalizers_info {
-      std::vector<finalizer_auth_info> last_proposed_finalizers; // sorted by ascending finalizer key id
+    struct [[eosio::table("lastpropfins")]] _lastpropfins_s
+    {
+      std::vector<finalizer_auth_info> last_proposed_finalizers;
 
       uint64_t primary_key()const { return 0; }
 
-      EOSLIB_SERIALIZE( last_prop_finalizers_info, (last_proposed_finalizers) )
-   };
+      EOSLIB_SERIALIZE(_lastpropfins_s, (last_proposed_finalizers))
+    };
 
-  typedef multi_index< "lastpropfins"_n, last_prop_finalizers_info >  last_prop_fins_table;
+    typedef multi_index<name("lastpropfins"), _lastpropfins_s> _lastpropfins;
 
-   // A single entry storing next available finalizer key_id to make sure
-   // key_id in finalizers_table will never be reused.
-   struct [[eosio::table("finkeyidgen")]] fin_key_id_generator_info {
+    // A single entry storing next available finalizer key_id to make sure
+    // key_id in finalizers_table will never be reused.
+    struct [[eosio::table("finkeyidgen")]] _finkeyidgen_s {
       uint64_t next_finalizer_key_id = 0;
-      uint64_t primary_key()const { return 0; }
+      uint64_t primary_key()const { return 0; };
 
-      EOSLIB_SERIALIZE( fin_key_id_generator_info, (next_finalizer_key_id) )
-   };
+      EOSLIB_SERIALIZE(_finkeyidgen_s, (next_finalizer_key_id))
+    };
+    typedef multi_index<name("finkeyidgen"), _finkeyidgen_s> _finkeyidgen;
 
-  typedef multi_index< "finkeyidgen"_n, fin_key_id_generator_info >  fin_key_id_gen_table;
+    struct [[eosio::table("limitauthchg")]] _limitauthchg_s
+    {
+      uint8_t version = 0;
+      name account;
+      std::vector<name> allow_perms;
+      std::vector<name> disallow_perms;
 
-    struct [[eosio::table("voters")]] _voters_s {
+      uint64_t primary_key() const { return account.value; };
+
+      EOSLIB_SERIALIZE(_limitauthchg_s, (version)(account)(allow_perms)(disallow_perms))
+    };
+    typedef multi_index<name("limitauthchg"), _limitauthchg_s> _limitauthchg;
+
+    struct [[eosio::table("voters")]] _voters_s
+    {
       name owner;
       name proxy;
       std::vector<name> producers;
@@ -426,7 +427,8 @@ CONTRACT system : public eosio::contract {
     };
     typedef multi_index<name("voters"), _voters_s> _voters;
 
-    struct [[eosio::table("userres")]] _userres_s {
+    struct [[eosio::table("userres")]] _userres_s
+    {
       name owner;
       asset net_weight;
       asset cpu_weight;
@@ -439,8 +441,31 @@ CONTRACT system : public eosio::contract {
     };
     typedef multi_index<name("userres"), _userres_s> _userres;
 
+    struct [[eosio::table("namebids")]] _namebids_s
+    {
+      name newname;
+      name high_bidder;
+      int64_t high_bid = 0; ///< negative high_bid == closed auction waiting to be claimed
+      time_point last_bid_time;
+
+      uint64_t primary_key() const { return newname.value; };
+      uint64_t by_high_bid() const { return static_cast<uint64_t>(-high_bid); };
+    };
+    typedef multi_index<name("namebids"), _namebids_s,
+      indexed_by<name("highbid"), const_mem_fun<_namebids_s, uint64_t, &_namebids_s::by_high_bid>>
+    >_namebids;
+
+    struct [[eosio::table("bidrefunds")]] _bidrefunds_s
+    {
+      name bidder;
+      asset amount;
+
+      uint64_t primary_key()const { return bidder.value; };
+    };
+    typedef multi_index<name("bidrefunds"), _bidrefunds_s> _bidrefunds;
+
 // 0.NATIVE ACTIONS
-    void check_auth_change(name contract, name account, const binary_extension<name> & authorized_by);
+    void check_auth_change(name contract, name account, binary_extension<name> authorized_by);
     [[eosio::action]] void limitauthchg(const name & account, const std::vector<name> & allow_perms, const std::vector<name> & disallow_perms);
 
     [[eosio::action]] void updateauth(name account, name permission, name parent, authority auth, binary_extension<name> authorized_by){
@@ -467,187 +492,64 @@ CONTRACT system : public eosio::contract {
     [[eosio::action]] void setcode(const name & account, uint8_t vmtype, uint8_t vmversion, const std::vector<char> & code, const binary_extension<std::string> & memo){}
 
 // 1.CONFIG ACTIONS
-    [[eosio::action]] void init(unsigned_int version, const symbol & core);
+    [[eosio::action]] void init(bool destruct, const std::string & memo);
     [[eosio::action]] void setparams(const blockchain_parameters_t & params);
     [[eosio::action]] void wasmcfg(const name & settings);
     [[eosio::action]] void activate(const eosio::checksum256 & feature_digest);
-
     [[eosio::action]] void setram(uint64_t max_ram_size);
-    [[eosio::action]] void logsystemfee(const name & protocol, const asset & fee, const std::string & memo);
 
 // 2.ADMIN ACTIONS
-    [[eosio::action]] void setwhitelist(const name & account, int8_t depth);
+    [[eosio::action]] void setwhitelist(const name & account, uint8_t depth);
     [[eosio::action]] void setpriv(const name & account, uint8_t is_priv);
     [[eosio::action]] void rmvproducer(const name & producer);
-    [[eosio::action]] void setacctram(const name & account, const std::optional<int64_t> & ram_bytes);
+    [[eosio::action]] void setacctram(const name & account);
 
-// 3.USER ACTIONS
-    [[eosio::action]] void bidname(const name & bidder, const name & newname, const asset & bid);
-    [[eosio::action]] void bidrefund(const name & bidder, const name & newname);
-
-// 4.TOKENOMICS / PRODUCERS / VOTING
-    [[eosio::action]] void onblock(ignore<block_header> header);
-    [[eosio::action]] void claimrewards(const name & owner);
-    [[eosio::action]] void unvest(const name account, const asset unvest_net_quantity, const asset unvest_cpu_quantity);
-
-    [[eosio::action]] void setschedule(const time_point_sec start_time, double continuous_rate);
-    [[eosio::action]] void delschedule(const time_point_sec start_time);
-    [[eosio::action]] void execschedule();
-
-    [[eosio::action]] void regproducer(const name & producer, const public_key & producer_key, const std::string & url, uint16_t location);
+// 3.PRODUCERS ACTIONS
+    [[eosio::action]] void regproducer(const name & producer, const eosio::block_signing_authority & producer_authority, const std::string & url, const uint16_t & location);
     [[eosio::action]] void unregprod(const name & producer);
+
     [[eosio::action]] void regfinkey(const name & finalizer_name, const std::string & finalizer_key, const std::string & proof_of_possession);
     [[eosio::action]] void actfinkey(const name & finalizer_name, const std::string & finalizer_key);
     [[eosio::action]] void delfinkey(const name & finalizer_name, const std::string & finalizer_key);
+    [[eosio::action]] void switchtosvnn();
 
+// 4.TOKENOMICS ACTIONS
+    [[eosio::action]] void logsystemfee(const name & protocol, const asset & fee, const std::string & memo);
+    [[eosio::action]] void onblock(ignore<block_header> header);
+    [[eosio::action]] void claimrewards(const name & owner);
+
+// 5.USER ACTIONS
     [[eosio::action]] void voteproducer(const name & voter, const name & proxy, const std::vector<name> & producers);
     [[eosio::action]] void voteupdate(const name & voter_name);
-    [[eosio::action]] void regproxy(const name proxy, bool isproxy);
+    [[eosio::action]] void regproxy(const name & proxy, bool isproxy);
+
+    [[eosio::action]] void bidname(const name & bidder, const name & newname, const asset & bid);
+    [[eosio::action]] void bidrefund(const name & bidder, const name & newname);
 
   private:
 
-// GENERAL FUNCTIONS
+// 3.FINALIZERS FUNCTIONS
+    std::optional<std::vector<systemcore::finalizer_auth_info>> _last_prop_finalizers_cached;
 
-    static _global_s get_default_parameters() {
-      _global_s dp;
-      get_blockchain_parameters(dp);
-      return dp;
-    }
+    eosio::bls_g1 to_binary(const std::string & finalizer_key);
+    eosio::checksum256 get_finalizer_key_hash(const std::string & finalizer_key);
+    eosio::checksum256 get_finalizer_key_hash(const eosio::bls_g1 & finalizer_key_binary);
 
-    system(name s, name code, datastream<const char*> ds)
-      :system(s,code,ds),
-      _voters(get_self(), get_self().value),
-      _producers(get_self(), get_self().value),
-      _finalizer_keys(get_self(), get_self().value),
-      _finalizers(get_self(), get_self().value),
-      _last_prop_finalizers(get_self(), get_self().value),
-      _fin_key_id_generator(get_self(), get_self().value),
-      _global(get_self(), get_self().value),
-      _schedules(get_self(), get_self().value)
-    {
-      _gstate = _global.exists() ? _global.get() : get_default_parameters();
-    }
+    bool is_savanna_consensus(_lastpropfins & lastpropfins);
+    std::vector<systemcore::finalizer_auth_info> & get_last_proposed_finalizers(_lastpropfins & lastpropfins);
+    void set_proposed_finalizers(std::vector<systemcore::finalizer_auth_info> finalizers, _lastpropfins & lastpropfins);
+    void update_elected_producers(const block_timestamp & timestamp);
 
-    ~system() {
-      _global.set(_gstate, get_self());
-    }
+    systemcore::_finalizers::const_iterator get_finalizer_itr(const name & finalizer_name, _finalizers & finalizers) const;
+    uint64_t get_next_finalizer_key_id(_finkeyidgen & finkeyidgen);
 
-    void channel_to_system_fees(const name & from, const asset & amount);
-    bool execute_next_schedule();
+// 4.BLOCKS ACTIONS
+    uint32_t block_height_from_id(const eosio::checksum256 & block_id) const;
+    void add_to_blockinfo_table(const eosio::checksum256 & previous_block_id, const eosio::block_timestamp timestamp) const;
 
-    // defined in delegate_bandwidth.cpp
-    void changebw( name from, const name& receiver,
-                  const asset& stake_net_quantity, const asset& stake_cpu_quantity, bool transfer );
-    int64_t update_voting_power( const name& voter, const asset& total_update );
+    systemcore::latest_block_batch_info_result get_latest_block_batch_info(uint32_t batch_start_height_offset, uint32_t batch_size, name system_account_name = name("eosio"));
 
-
-    // defined in voting.cpp
-    void register_producer( const name& producer, const eosio::block_signing_authority& producer_authority, const std::string& url, uint16_t location );
-    void update_elected_producers( const block_timestamp& timestamp );
-    void update_votes( const name& voter, const name& proxy, const std::vector<name>& producers, bool voting );
-    void propagate_weight_change( const voter_info& voter );
-
-    double update_total_votepay_share( const time_point& ct,
-                                      double additional_shares_delta = 0.0, double shares_rate_delta = 0.0 );
-
-    // defined in finalizer_key.cpp
-    bool is_savanna_consensus();
-    void set_proposed_finalizers( std::vector<finalizer_auth_info> finalizers );
-    const std::vector<finalizer_auth_info>& get_last_proposed_finalizers();
-    uint64_t get_next_finalizer_key_id();
-    finalizers_table::const_iterator get_finalizer_itr( const name& finalizer_name ) const;
-
-    void add_to_blockinfo_table(const eosio::checksum256& previous_block_id, const eosio::block_timestamp timestamp) const;
-
-    // Move this later on
-    latest_block_batch_info_result get_latest_block_batch_info(uint32_t batch_start_height_offset, uint32_t batch_size, name system_account_name = name("eosio"))
-    {
-      latest_block_batch_info_result result;
-
-      if (batch_size == 0) {
-          result.error_code = latest_block_batch_info_result::invalid_input;
-          return result;
-      }
-
-      block_info_table t(system_account_name, 0);
-
-      // Find information on latest block recorded in the blockinfo table.
-
-      if (t.cbegin() == t.cend()) {
-          // The blockinfo table is empty.
-          result.error_code = latest_block_batch_info_result::insufficient_data;
-          return result;
-      }
-
-      auto latest_block_info_itr = --t.cend();
-
-      if (latest_block_info_itr->version != 0) {
-          // Compiled code for this function within the calling contract has not been updated to support new version of
-          // the blockinfo table.
-          result.error_code = latest_block_batch_info_result::unsupported_version;
-          return result;
-      }
-
-      uint32_t latest_block_batch_end_height = latest_block_info_itr->block_height;
-
-      if (latest_block_batch_end_height < batch_start_height_offset) {
-          // Caller asking for a block batch that has not even begun to be recorded yet.
-          result.error_code = latest_block_batch_info_result::insufficient_data;
-          return result;
-      }
-
-      // Calculate height for the starting block of the latest block batch.
-
-      uint32_t latest_block_batch_start_height =
-          latest_block_batch_end_height - ((latest_block_batch_end_height - batch_start_height_offset) % batch_size);
-
-      // Note: 1 <= (latest_block_batch_end_height - latest_block_batch_start_height + 1) <= batch_size
-
-      if (latest_block_batch_start_height == latest_block_batch_end_height) {
-          // When batch_size == 1, this function effectively simplifies to just returning the info of the latest recorded
-          // block. In that case, the start block and the end block of the batch are the same and there is no need for
-          // another lookup. So shortcut the rest of the process and return a successful result immediately.
-          result.result.emplace(block_batch_info{
-            .batch_start_height          = latest_block_batch_start_height,
-            .batch_start_timestamp       = latest_block_info_itr->block_timestamp,
-            .batch_current_end_height    = latest_block_batch_end_height,
-            .batch_current_end_timestamp = latest_block_info_itr->block_timestamp,
-          });
-          return result;
-      }
-
-      // Find information on start block of the latest block batch recorded in the blockinfo table.
-
-      auto start_block_info_itr = t.find(latest_block_batch_start_height);
-      if (start_block_info_itr == t.cend() || start_block_info_itr->block_height != latest_block_batch_start_height) {
-          // Record for information on start block of the latest block batch could not be found in blockinfo table.
-          // This is either because of:
-          //    * a gap in recording info due to a failed onblock action;
-          //    * a requested start block that was processed by onblock prior to deployment of the system contract code
-          //    introducing the blockinfo table;
-          //    * or, most likely, because the record for the requested start block was pruned from the blockinfo table as
-          //    it fell out of the rolling window.
-          result.error_code = latest_block_batch_info_result::insufficient_data;
-          return result;
-      }
-
-      if (start_block_info_itr->version != 0) {
-          // Compiled code for this function within the calling contract has not been updated to support new version of
-          // the blockinfo table.
-          result.error_code = latest_block_batch_info_result::unsupported_version;
-          return result;
-      }
-
-      // Successfully return block_batch_info for the found latest block batch in its current state.
-
-      result.result.emplace(block_batch_info{
-          .batch_start_height          = latest_block_batch_start_height,
-          .batch_start_timestamp       = start_block_info_itr->block_timestamp,
-          .batch_current_end_height    = latest_block_batch_end_height,
-          .batch_current_end_timestamp = latest_block_info_itr->block_timestamp,
-      });
-      return result;
-    }
+// 5.VOTING FUNCTIONS
+    int64_t update_voting_power(const name & voter, const asset & total_update);
+    void update_votes(const name & voter, const name & proxy, const std::vector<name> & producers, bool voting);
 };
-
-

@@ -1,4 +1,4 @@
-void system::check_auth_change(name contract, name account, const binary_extension<name> & authorized_by)
+void systemcore::check_auth_change(name contract, name account, binary_extension<name> authorized_by)
 {
   name by(authorized_by.has_value() ? authorized_by.value().value : 0);
   if(by.value){
@@ -22,7 +22,7 @@ void system::check_auth_change(name contract, name account, const binary_extensi
   }
 }
 
-void system::limitauthchg(const name & account, const std::vector<name> & allow_perms, const std::vector<name> & disallow_perms)
+void systemcore::limitauthchg(const name & account, const std::vector<name> & allow_perms, const std::vector<name> & disallow_perms)
 {
   _limitauthchg table(get_self(), get_self().value);
   require_auth(account);
@@ -32,26 +32,26 @@ void system::limitauthchg(const name & account, const std::vector<name> & allow_
 
   auto itr = table.find(account.value);
   if(!allow_perms.empty() || !disallow_perms.empty()){
-      if(itr == table.end()) {
-        table.emplace(account, [&](auto& row){
-          row.account = account;
-          row.allow_perms = allow_perms;
-          row.disallow_perms = disallow_perms;
-        });
-      } else {
-        table.modify(itr, account, [&](auto& row){
-          row.allow_perms = allow_perms;
-          row.disallow_perms = disallow_perms;
-        });
-      }
+    if(itr == table.end()) {
+      table.emplace(account, [&](auto & row){
+        row.account = account;
+        row.allow_perms = allow_perms;
+        row.disallow_perms = disallow_perms;
+      });
+    } else {
+      table.modify(itr, account, [&](auto & row){
+        row.allow_perms = allow_perms;
+        row.disallow_perms = disallow_perms;
+      });
+    }
   } else {
-      if(itr != table.end()){
-        table.erase(itr);
-      }
+    if(itr != table.end()){
+      table.erase(itr);
+    }
   }
 }
 
-void system::newaccount(const name & creator, const name & new_account_name, ignore<authority> owner, ignore<authority> active)
+void systemcore::newaccount(const name & creator, const name & new_account_name, ignore<authority> owner, ignore<authority> active)
 {
   if(creator != get_self()) {
     uint64_t tmp = new_account_name.value >> 4;
@@ -85,17 +85,17 @@ void system::newaccount(const name & creator, const name & new_account_name, ign
   });
 }
 
-void system::setabi(const name & acnt, const std::vector<char> & abi, const binary_extension<std::string> & memo)
+void systemcore::setabi(const name & acnt, const std::vector<char> & abi, const binary_extension<std::string> & memo)
 {
   multi_index<name("abihash"), _abihash_s> table(get_self(), get_self().value);
-  auto itr = table.find( acnt.value );
-  if( itr == table.end() ) {
-    table.emplace( acnt, [&]( auto& row ) {
+  auto itr = table.find(acnt.value);
+  if(itr == table.end()){
+    table.emplace(acnt, [&](auto & row){
       row.owner = acnt;
       row.hash = eosio::sha256(const_cast<char*>(abi.data()), abi.size());
     });
   } else {
-    table.modify( itr, same_payer, [&]( auto& row ) {
+    table.modify( itr, same_payer, [&](auto & row){
       row.hash = eosio::sha256(const_cast<char*>(abi.data()), abi.size());
     });
   }
