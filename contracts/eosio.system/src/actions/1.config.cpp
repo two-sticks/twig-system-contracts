@@ -2,22 +2,20 @@ void systemcore::init(bool destruct, const std::string & memo)
 {
   require_auth(get_self());
   _global global(get_self(), get_self().value);
+  _aluckynumber aluckynumber(get_self(), get_self().value);
+
   if (destruct){
     global.remove();
+    aluckynumber.remove();
   } else {
     _global_s dp;
     get_blockchain_parameters(dp);
 
     global.set(dp, get_self());
+    aluckynumber.set(_aluckynumber_s{}, get_self());
   }
-  /*
-  check(version.value == 0, "unsupported version for init action");
-
-  auto system_token_supply = token::get_supply(token_account, core.code());
-  check(system_token_supply.symbol == core, "specified core symbol does not exist (precision mismatch)");
-
-  check(system_token_supply.amount > 0, "system token supply must be greater than 0");
-  */
+  auto system_token_supply = token::get_supply(token_account, core_symbol.code());
+  check(system_token_supply.symbol == core_symbol, "specified core symbol does not exist (precision mismatch)");
 }
 
 #ifdef SYSTEM_BLOCKCHAIN_PARAMETERS

@@ -27,6 +27,40 @@
             ]
         },
         {
+            "name": "_aluckynumber_s",
+            "base": "",
+            "fields": [
+                {
+                    "name": "seed",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "odds",
+                    "type": "uint32"
+                },
+                {
+                    "name": "epoch",
+                    "type": "uint32"
+                },
+                {
+                    "name": "chunks_remaining",
+                    "type": "uint32"
+                },
+                {
+                    "name": "blocks_since",
+                    "type": "uint32"
+                },
+                {
+                    "name": "total_blocks",
+                    "type": "uint64"
+                },
+                {
+                    "name": "producer",
+                    "type": "name"
+                }
+            ]
+        },
+        {
             "name": "_bidrefunds_s",
             "base": "",
             "fields": [
@@ -603,6 +637,16 @@
             ]
         },
         {
+            "name": "feedthebeast",
+            "base": "",
+            "fields": [
+                {
+                    "name": "seed",
+                    "type": "checksum256"
+                }
+            ]
+        },
+        {
             "name": "finalizer_auth_info",
             "base": "",
             "fields": [
@@ -755,6 +799,11 @@
                     "type": "block_header"
                 }
             ]
+        },
+        {
+            "name": "onchunk",
+            "base": "",
+            "fields": []
         },
         {
             "name": "onerror",
@@ -1150,6 +1199,11 @@
             "ricardian_contract": ""
         },
         {
+            "name": "feedthebeast",
+            "type": "feedthebeast",
+            "ricardian_contract": ""
+        },
+        {
             "name": "init",
             "type": "init",
             "ricardian_contract": ""
@@ -1177,6 +1231,11 @@
         {
             "name": "onblock",
             "type": "onblock",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "onchunk",
+            "type": "onchunk",
             "ricardian_contract": ""
         },
         {
@@ -1279,6 +1338,13 @@
         {
             "name": "abihash",
             "type": "_abihash_s",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "aluckynumber",
+            "type": "_aluckynumber_s",
             "index_type": "i64",
             "key_names": [],
             "key_types": []

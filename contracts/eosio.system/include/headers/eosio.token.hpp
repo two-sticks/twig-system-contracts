@@ -12,7 +12,7 @@ namespace token
 
     uint64_t primary_key() const { return balance.symbol.code().raw(); };
   };
-  typedef eosio::multi_index<name("accounts"), _accounts_s > _accounts;
+  typedef multi_index<name("accounts"), _accounts_s> _accounts;
 
   // Stats Table
   struct _stats_s {
@@ -22,7 +22,7 @@ namespace token
 
     uint64_t primary_key() const { return supply.symbol.code().raw(); };
   };
-  typedef eosio::multi_index<name("stat"), _stats_s > _stats;
+  typedef multi_index<name("stat"), _stats_s> _stats;
 
   // Functions
   static asset get_supply(name token_contract_account, symbol_code sym_code){

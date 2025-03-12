@@ -28,10 +28,11 @@
 #include <eosio/instant_finality.hpp>
 #include <eosio/transaction.hpp>
 
-#include <eosio.token.hpp>
+#include <headers/eosio.token.hpp>
+#include <headers/RandomnessProvider.hpp>
 
 using namespace eosio;
-CONTRACT systemcore : public eosio::contract {
+class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
   public:
     using eosio::contract::contract;
 
@@ -41,12 +42,15 @@ CONTRACT systemcore : public eosio::contract {
 
     static constexpr eosio::name active_permission{"active"_n};
     static constexpr eosio::name token_account{"eosio.token"_n};
+
+    static constexpr eosio::name chunk_account{"eosio.chunks"_n};
+    static constexpr eosio::name world_account{"eosio.world"_n};
+    static constexpr eosio::name bank_account{"eosio.bank"_n};
+    static constexpr eosio::name board_account{"eosio.board"_n};
+
     static constexpr eosio::name stake_account{"eosio.stake"_n};
-    static constexpr eosio::name bpay_account{"eosio.bpay"_n};
-    static constexpr eosio::name names_account{"eosio.names"_n};
-    static constexpr eosio::name saving_account{"eosio.saving"_n};
-    static constexpr eosio::name fees_account{"eosio.fees"_n};
     static constexpr eosio::name null_account{"eosio.null"_n};
+    static constexpr eosio::name names_account{"eosio.names"_n};
 
     static constexpr uint32_t seconds_per_year = 52 * 7 * 24 * 3600;
     static constexpr uint32_t seconds_per_day = 24 * 3600;
@@ -60,9 +64,36 @@ CONTRACT systemcore : public eosio::contract {
     static constexpr int64_t  inflation_precision = 100; // 2 decimals
     static constexpr int64_t  default_annual_rate = 500; // 5% annual rate
 
-    static constexpr int64_t user_ram_limit = 1'000'000'000ll; // 1GB, just a big number
+    static constexpr int64_t user_ram_limit = 1024*1024*1024ll; // 1GB, just a big number
 
     static constexpr uint32_t rolling_window_size = 10;
+
+// Lucky Tokenomics!
+    static constexpr uint32_t lucky_number_odds = 16 * 16 * 16; // Out of == 4096;
+    static constexpr uint32_t lucky_number_chunks = 6 * 30 * 24 * 3600 / lucky_number_odds; // Approx 6 months || 180 days == 3796.875;
+
+    static constexpr double lucky_number_chunk_weight = 1.0 / ((double)lucky_number_chunks * 20.0); // 10 years;
+
+    static constexpr double lucky_number_world_weight = 0.975;
+    static constexpr double lucky_number_world_weight_inverse = ((lucky_number_world_weight - 1) * -1);
+
+    static constexpr double lucky_number_team_weight = lucky_number_world_weight_inverse * 0.45;
+    static constexpr double lucky_number_board_weight = lucky_number_world_weight_inverse * 0.45;
+    static constexpr double lucky_number_producer_weight = lucky_number_world_weight_inverse * 0.1;
+
+    /*
+    -> If EPOCH < 20, issue tokens ->>> lucky_number_chunk_weight * maximum_supply
+
+    -> Issued tokens + tokens from fees ->>> All sent & gathered at eosio.chunks
+
+    -> onChunk(), -> send all tokens
+    -> from eosio.chunks
+    -> to eosio.world w/ world weight
+
+    -> remaining is split amongst team, (leader)board & producers
+    -> team & producers -> portion gets sent to eosio.bank & vests; becomes available for claiming during the next epoch
+    -> board -> portion gets sent to eosio.board & vests; winners are chosen & then it becomes available for claiming during the next epoch
+    */
 
 // TEMPLATES
     template<typename E, typename F>
@@ -184,6 +215,21 @@ CONTRACT systemcore : public eosio::contract {
     };
 
 // TABLES //
+
+    struct [[eosio::table("aluckynumber")]] _aluckynumber_s
+    {
+      eosio::checksum256 seed;
+      uint32_t odds = lucky_number_odds;
+
+      uint32_t epoch = 1; // Allowance for 5% initial supply
+      uint32_t chunks_remaining = lucky_number_chunks;
+
+      uint32_t blocks_since = 0;
+      uint64_t total_blocks = 0;
+
+      name producer;
+    };
+    typedef singleton<name("aluckynumber"), _aluckynumber_s> _aluckynumber;
 
     struct [[eosio::table("global")]] _global_s : eosio::blockchain_parameters
     {
@@ -515,7 +561,10 @@ CONTRACT systemcore : public eosio::contract {
 
 // 4.TOKENOMICS ACTIONS
     [[eosio::action]] void logsystemfee(const name & protocol, const asset & fee, const std::string & memo);
+    [[eosio::action]] void feedthebeast(eosio::checksum256 & seed);
     [[eosio::action]] void onblock(ignore<block_header> header);
+    [[eosio::action]] void onchunk();
+
     [[eosio::action]] void claimrewards(const name & owner);
 
 // 5.USER ACTIONS
@@ -548,6 +597,8 @@ CONTRACT systemcore : public eosio::contract {
     void add_to_blockinfo_table(const eosio::checksum256 & previous_block_id, const eosio::block_timestamp timestamp) const;
 
     systemcore::latest_block_batch_info_result get_latest_block_batch_info(uint32_t batch_start_height_offset, uint32_t batch_size, name system_account_name = name("eosio"));
+
+    void on_a_lucky_block(name & producer, checksum256 & previous_block_id);
 
 // 5.VOTING FUNCTIONS
     int64_t update_voting_power(const name & voter, const asset & total_update);

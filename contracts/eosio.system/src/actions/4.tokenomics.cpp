@@ -3,6 +3,19 @@ void systemcore::logsystemfee(const name & protocol, const asset & fee, const st
   require_auth(get_self());
 }
 
+void systemcore::feedthebeast(eosio::checksum256 & seed)
+{
+  require_auth(get_self());
+
+  _aluckynumber aluckynumber(get_self(), get_self().value);
+  auto new_luck = aluckynumber.get();
+
+  RandomnessProvider randomness_provider(seed);
+  new_luck.seed = randomness_provider.get_blend(new_luck.seed);
+
+  aluckynumber.set(new_luck, get_self());
+}
+
 void systemcore::onblock(ignore<block_header>)
 {
   require_auth(get_self());
@@ -28,6 +41,8 @@ void systemcore::onblock(ignore<block_header>)
       row.unpaid_blocks++;
     });
   }
+
+  on_a_lucky_block(producer, previous_block_id);
 
   /// only update block producers once every minute, block_timestamp is in half seconds
   if(timestamp.slot - _gstate.last_producer_schedule_update.slot > blocks_per_minute){
@@ -61,6 +76,65 @@ void systemcore::onblock(ignore<block_header>)
 
   global.set(_gstate, get_self());
 }
+
+void systemcore::onchunk()
+{
+  require_auth(get_self());
+
+  _aluckynumber aluckynumber(get_self(), get_self().value);
+  auto new_luck = aluckynumber.get();
+
+  asset chunk_tokens = token::get_balance(token_account, chunk_account, core_symbol.code());
+
+  // Issue tokens
+  if (new_luck.epoch < 20){
+    auto tokens_to_issue = token::get_max_supply(token_account, core_symbol.code());
+    tokens_to_issue.amount = tokens_to_issue.amount * lucky_number_chunk_weight;
+    chunk_tokens += tokens_to_issue;
+    // Add in checks to not overmint from the max supply -> later
+    eosio::action(eosio::permission_level{get_self(), eosio::name("active")}, token_account, eosio::name("issue"),
+      std::make_tuple(chunk_account, tokens_to_issue, (std::string)"A chunk has been found! Distributing rewards...")).send();
+  }
+
+  /// TEAM TOKENS ///
+  asset team_tokens = chunk_tokens;
+  team_tokens.amount = team_tokens.amount * lucky_number_team_weight;
+  eosio::action(eosio::permission_level{get_self(), eosio::name("active")}, token_account, eosio::name("transfer"),
+    std::make_tuple(chunk_account, bank_account, team_tokens, (std::string)"team_share")).send();
+
+  /// LEADERBOARD TOKENS ///
+  asset board_tokens = chunk_tokens;
+  board_tokens.amount = board_tokens.amount * lucky_number_board_weight;
+  eosio::action(eosio::permission_level{get_self(), eosio::name("active")}, token_account, eosio::name("transfer"),
+    std::make_tuple(chunk_account, board_account, board_tokens, (std::string)"board_share")).send();
+
+  /// PRODUCER TOKENS ///
+  asset producer_tokens = chunk_tokens;
+  producer_tokens.amount = producer_tokens.amount * lucky_number_producer_weight;
+  eosio::action(eosio::permission_level{get_self(), eosio::name("active")}, token_account, eosio::name("transfer"),
+    std::make_tuple(chunk_account, bank_account, producer_tokens, (std::string)"producer_share")).send();
+
+  /// CHUNK -> WORLD TOKENS ///
+  chunk_tokens.amount = chunk_tokens.amount * lucky_number_world_weight;
+  eosio::action(eosio::permission_level{get_self(), eosio::name("active")}, token_account, eosio::name("transfer"),
+    std::make_tuple(chunk_account, world_account, chunk_tokens, (std::string)"Refilling World...")).send();
+}
+
+
+    /*
+    -> If EPOCH < 20, issue tokens ->>> lucky_number_chunk_weight * maximum_supply
+
+    -> Issued tokens + tokens from fees ->>> All sent & gathered at eosio.chunks
+
+    -> onChunk(), -> send all tokens
+    -> from eosio.chunks
+    -> to eosio.world w/ world weight
+
+    -> remaining is split amongst team, (leader)board & producers
+    -> team & producers -> portion gets sent to eosio.bank & vests; becomes available for claiming during the next epoch
+    -> board -> portion gets sent to eosio.board & vests; winners are chosen & then it becomes available for claiming during the next epoch
+    */
+
 
 void systemcore::claimrewards(const name & owner)
 {
