@@ -37,7 +37,7 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     using eosio::contract::contract;
 
 // STATIC
-    static constexpr symbol core_symbol = symbol(symbol_code("TWIG"), 8);
+    static constexpr symbol core_symbol = symbol(symbol_code("TWIG"), 4);
     static constexpr symbol ram_symbol = symbol(symbol_code("RAM"), 0);
 
     static constexpr eosio::name active_permission{"active"_n};
