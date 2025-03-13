@@ -1,0 +1,171 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.2",
+    "types": [],
+    "structs": [
+        {
+            "name": "_bidrefunds_s",
+            "base": "",
+            "fields": [
+                {
+                    "name": "bidder",
+                    "type": "name"
+                },
+                {
+                    "name": "amount",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "_config_s",
+            "base": "",
+            "fields": [
+                {
+                    "name": "core_symbol",
+                    "type": "symbol"
+                }
+            ]
+        },
+        {
+            "name": "_namebids_s",
+            "base": "",
+            "fields": [
+                {
+                    "name": "newname",
+                    "type": "name"
+                },
+                {
+                    "name": "high_bidder",
+                    "type": "name"
+                },
+                {
+                    "name": "high_bid",
+                    "type": "asset"
+                },
+                {
+                    "name": "last_bid_time",
+                    "type": "time_point"
+                }
+            ]
+        },
+        {
+            "name": "bidname",
+            "base": "",
+            "fields": [
+                {
+                    "name": "bidder",
+                    "type": "name"
+                },
+                {
+                    "name": "newname",
+                    "type": "name"
+                },
+                {
+                    "name": "bid",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "bidrefund",
+            "base": "",
+            "fields": [
+                {
+                    "name": "bidder",
+                    "type": "name"
+                },
+                {
+                    "name": "newname",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "cleanup",
+            "base": "",
+            "fields": [
+                {
+                    "name": "newname",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "exec",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "init",
+            "base": "",
+            "fields": [
+                {
+                    "name": "destruct",
+                    "type": "bool"
+                },
+                {
+                    "name": "core_symbol",
+                    "type": "symbol"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "bidname",
+            "type": "bidname",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "bidrefund",
+            "type": "bidrefund",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "cleanup",
+            "type": "cleanup",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "exec",
+            "type": "exec",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "init",
+            "type": "init",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "bidrefunds",
+            "type": "_bidrefunds_s",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "config",
+            "type": "_config_s",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "namebids",
+            "type": "_namebids_s",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [],
+    "variants": [],
+    "action_results": []
+}

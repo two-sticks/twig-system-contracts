@@ -1,0 +1,62 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.2",
+    "types": [],
+    "structs": [
+        {
+            "name": "_vesting_s",
+            "base": "",
+            "fields": [
+                {
+                    "name": "producer",
+                    "type": "name"
+                },
+                {
+                    "name": "vested",
+                    "type": "asset"
+                },
+                {
+                    "name": "unvesting_total",
+                    "type": "asset"
+                },
+                {
+                    "name": "unvested",
+                    "type": "asset"
+                },
+                {
+                    "name": "epoch",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
+            "name": "onepoch",
+            "base": "",
+            "fields": [
+                {
+                    "name": "epoch",
+                    "type": "uint32"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "onepoch",
+            "type": "onepoch",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "vesting",
+            "type": "_vesting_s",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [],
+    "variants": [],
+    "action_results": []
+}

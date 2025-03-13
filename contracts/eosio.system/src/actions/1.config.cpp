@@ -93,24 +93,10 @@ void systemcore::wasmcfg(const name & settings)
   set_wasm_parameters_packed(buf, sizeof(buf));
 }
 
-void systemcore::activate(const eosio::checksum256 & feature_digest)
+void systemcore::activate(const checksum256 & feature_digest)
 {
   require_auth(get_self());
   preactivate_feature(feature_digest);
 }
 
-void systemcore::setram(uint64_t max_ram_size)
-{
-  require_auth(get_self());
-
-  _global global(get_self(), get_self().value);
-  auto _gstate = global.get();
-
-  check(_gstate.max_ram_size < max_ram_size, "ram may only be increased");
-  check(max_ram_size < 1024ll*1024*1024*1024*1024, "ram size is unrealistic");
-  check(max_ram_size > _gstate.total_ram_bytes_reserved, "attempt to set max below reserved");
-
-  _gstate.max_ram_size = max_ram_size;
-  global.set(_gstate, get_self());
-}
 

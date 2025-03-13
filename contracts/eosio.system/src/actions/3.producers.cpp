@@ -1,4 +1,4 @@
-void systemcore::regproducer(const name & producer, const eosio::block_signing_authority & producer_authority, const std::string & url, const uint16_t & location)
+void systemcore::regproducer(const name & producer, const block_signing_authority & producer_authority, const std::string & url, const uint16_t & location)
 {
   check(url.size() < 512, "url too long");
   const auto ct = current_time_point();
@@ -26,8 +26,8 @@ void systemcore::regproducer(const name & producer, const eosio::block_signing_a
         row.last_claim_time = ct;
     });
   } else {
+    require_auth(get_self());
     producers.emplace(producer, [&](auto & row){
-      require_auth(get_self());
       row.owner = producer;
       row.total_votes = 0;
       row.producer_key = producer_key;

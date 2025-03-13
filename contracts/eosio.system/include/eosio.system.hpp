@@ -41,16 +41,19 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     static constexpr symbol ram_symbol = symbol(symbol_code("RAM"), 0);
 
     static constexpr eosio::name active_permission{"active"_n};
-    static constexpr eosio::name token_account{"eosio.token"_n};
 
-    static constexpr eosio::name chunk_account{"eosio.chunks"_n};
+    static constexpr eosio::name token_account{"eosio.token"_n};
+    static constexpr eosio::name chunks_account{"eosio.chunks"_n};
+
+    static constexpr eosio::name team_account{"eosio.twig"_n};
     static constexpr eosio::name world_account{"eosio.world"_n};
     static constexpr eosio::name bank_account{"eosio.bank"_n};
     static constexpr eosio::name board_account{"eosio.board"_n};
 
-    static constexpr eosio::name stake_account{"eosio.stake"_n};
-    static constexpr eosio::name null_account{"eosio.null"_n};
+    static constexpr eosio::name savings_account{"eosio.saving"_n};
     static constexpr eosio::name names_account{"eosio.names"_n};
+    static constexpr eosio::name null_account{"eosio.null"_n};
+
 
     static constexpr uint32_t seconds_per_year = 52 * 7 * 24 * 3600;
     static constexpr uint32_t seconds_per_day = 24 * 3600;
@@ -69,7 +72,7 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     static constexpr uint32_t rolling_window_size = 10;
 
 // Lucky Tokenomics!
-    static constexpr uint32_t lucky_number_odds = 16 * 16 * 16; // Out of == 4096;
+    static constexpr uint32_t lucky_number_odds = 16 * 16; // Temp * 16; // Out of == 4096;
     static constexpr uint32_t lucky_number_chunks = 6 * 30 * 24 * 3600 / lucky_number_odds; // Approx 6 months || 180 days == 3796.875;
 
     static constexpr double lucky_number_chunk_weight = 1.0 / ((double)lucky_number_chunks * 20.0); // 10 years;
@@ -218,7 +221,7 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
 
     struct [[eosio::table("aluckynumber")]] _aluckynumber_s
     {
-      eosio::checksum256 seed;
+      checksum256 seed;
       uint32_t odds = lucky_number_odds;
 
       uint32_t epoch = 1; // Allowance for 5% initial supply
@@ -271,7 +274,7 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
       uint8_t depth;
       uint64_t primary_key() const { return account.value; };
 
-      EOSLIB_SERIALIZE( _whitelist_s, (account)(depth) )
+      EOSLIB_SERIALIZE(_whitelist_s, (account)(depth))
     };
     typedef multi_index<name("whitelist"), _whitelist_s> _whitelist;
 
@@ -284,16 +287,25 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
       EOSLIB_SERIALIZE(_abihash_s, (owner)(hash))
     };
 
-    struct [[eosio::table("schedules")]] _schedules_s
+    struct temporal_256
     {
-      time_point_sec start_time;
-      double continuous_rate;
-
-      uint64_t primary_key() const { return start_time.sec_since_epoch(); };
-
-      EOSLIB_SERIALIZE(_schedules_s, (start_time)(continuous_rate))
+      time_point time;
+      checksum256 hash;
+      EOSLIB_SERIALIZE(temporal_256, (time)(hash))
     };
-    typedef multi_index<name("schedules"), _schedules_s> _schedules;
+
+    struct [[eosio::table("contractinfo")]] _contractinfo_s
+    {
+      name owner;
+      std::string version;
+      std::string source;
+      temporal_256 abi;
+      temporal_256 code;
+      uint64_t primary_key()const { return owner.value; };
+
+      EOSLIB_SERIALIZE(_contractinfo_s, (owner)(version)(source)(abi)(code))
+    };
+    typedef multi_index<name("contractinfo"), _contractinfo_s> _contractinfo;
 
     struct [[eosio::table("producers")]] _producers_s
     {
@@ -324,31 +336,31 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
 
       template<typename DataStream>
       friend DataStream& operator << (DataStream & ds, const _producers_s & t){
-         ds << t.owner
-            << t.total_votes
-            << t.producer_key
-            << t.is_active
-            << t.url
-            << t.unpaid_blocks
-            << t.last_claim_time
-            << t.location;
+        ds << t.owner
+          << t.total_votes
+          << t.producer_key
+          << t.is_active
+          << t.url
+          << t.unpaid_blocks
+          << t.last_claim_time
+          << t.location;
 
-         if( !t.producer_authority.has_value() ) return ds;
+        if( !t.producer_authority.has_value() ) return ds;
 
-         return ds << t.producer_authority;
+        return ds << t.producer_authority;
       }
 
       template<typename DataStream>
       friend DataStream& operator >> (DataStream & ds, _producers_s & t){
-         return ds >> t.owner
-                   >> t.total_votes
-                   >> t.producer_key
-                   >> t.is_active
-                   >> t.url
-                   >> t.unpaid_blocks
-                   >> t.last_claim_time
-                   >> t.location
-                   >> t.producer_authority;
+        return ds >> t.owner
+                  >> t.total_votes
+                  >> t.producer_key
+                  >> t.is_active
+                  >> t.url
+                  >> t.unpaid_blocks
+                  >> t.last_claim_time
+                  >> t.location
+                  >> t.producer_authority;
       }
     };
     typedef multi_index<name("producers"), _producers_s,
@@ -360,15 +372,10 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
       uint64_t id;
       name finalizer_name;
       std::string finalizer_key;
-      std::vector<char> finalizer_key_binary; // finalizer key in binary format in Affine little endian non-montgomery g1
+      std::vector<char> finalizer_key_binary;
 
       uint64_t primary_key() const { return id; };
       uint64_t by_fin_name() const { return finalizer_name.value; };
-      // Use binary format to hash. It is more robust and less likely to change
-      // than the base64url text encoding of it.
-      // There is no need to store the hash key to avoid re-computation,
-      // which only happens if the table row is modified. There won't be any
-      // modification of the table rows of; it may only be removed.
       checksum256 by_fin_key() const { return eosio::sha256(finalizer_key_binary.data(), finalizer_key_binary.size()); };
 
       bool is_active(uint64_t finalizer_active_key_id) const { return id == finalizer_active_key_id; };
@@ -383,9 +390,9 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     struct [[eosio::table("finalizers")]] _finalizers_s
     {
       name finalizer_name;
-      uint64_t active_key_id; // finalizer's active finalizer key's id in finalizer_keys_table, for fast finding key information
-      std::vector<char> active_key_binary; // finalizer's active finalizer key's binary format in Affine little endian non-montgomery g1
-      uint32_t finalizer_key_count = 0; // number of finalizer keys registered by this finalizer
+      uint64_t active_key_id;
+      std::vector<char> active_key_binary;
+      uint32_t finalizer_key_count = 0;
 
       uint64_t primary_key() const { return finalizer_name.value; };
 
@@ -421,12 +428,10 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
 
       EOSLIB_SERIALIZE(_lastpropfins_s, (last_proposed_finalizers))
     };
-
     typedef multi_index<name("lastpropfins"), _lastpropfins_s> _lastpropfins;
 
-    // A single entry storing next available finalizer key_id to make sure
-    // key_id in finalizers_table will never be reused.
-    struct [[eosio::table("finkeyidgen")]] _finkeyidgen_s {
+    struct [[eosio::table("finkeyidgen")]] _finkeyidgen_s
+    {
       uint64_t next_finalizer_key_id = 0;
       uint64_t primary_key()const { return 0; };
 
@@ -447,32 +452,6 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     };
     typedef multi_index<name("limitauthchg"), _limitauthchg_s> _limitauthchg;
 
-    struct [[eosio::table("voters")]] _voters_s
-    {
-      name owner;
-      name proxy;
-      std::vector<name> producers;
-      int64_t staked = 0;
-      double last_vote_weight = 0;
-
-      double proxied_vote_weight = 0;
-      bool is_proxy = 0;
-      uint32_t flags1 = 0;
-      uint32_t reserved2 = 0;
-      eosio::asset reserved3;
-
-      uint64_t primary_key()const { return owner.value; }
-
-      enum class flags1_fields : uint32_t {
-        ram_managed = 1,
-        net_managed = 2,
-        cpu_managed = 4
-      };
-
-      EOSLIB_SERIALIZE( _voters_s, (owner)(proxy)(producers)(staked)(last_vote_weight)(proxied_vote_weight)(is_proxy)(flags1)(reserved2)(reserved3))
-    };
-    typedef multi_index<name("voters"), _voters_s> _voters;
-
     struct [[eosio::table("userres")]] _userres_s
     {
       name owner;
@@ -486,29 +465,6 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
       EOSLIB_SERIALIZE(_userres_s, (owner)(net_weight)(cpu_weight)(ram_bytes))
     };
     typedef multi_index<name("userres"), _userres_s> _userres;
-
-    struct [[eosio::table("namebids")]] _namebids_s
-    {
-      name newname;
-      name high_bidder;
-      int64_t high_bid = 0; ///< negative high_bid == closed auction waiting to be claimed
-      time_point last_bid_time;
-
-      uint64_t primary_key() const { return newname.value; };
-      uint64_t by_high_bid() const { return static_cast<uint64_t>(-high_bid); };
-    };
-    typedef multi_index<name("namebids"), _namebids_s,
-      indexed_by<name("highbid"), const_mem_fun<_namebids_s, uint64_t, &_namebids_s::by_high_bid>>
-    >_namebids;
-
-    struct [[eosio::table("bidrefunds")]] _bidrefunds_s
-    {
-      name bidder;
-      asset amount;
-
-      uint64_t primary_key()const { return bidder.value; };
-    };
-    typedef multi_index<name("bidrefunds"), _bidrefunds_s> _bidrefunds;
 
 // 0.NATIVE ACTIONS
     void check_auth_change(name contract, name account, binary_extension<name> authorized_by);
@@ -535,14 +491,15 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
 // 0.WHITELISTED NATIVE ACTIONS
     [[eosio::action]] void newaccount(const name & creator, const name & name, ignore<authority> owner, ignore<authority> active);
     [[eosio::action]] void setabi(const name & account, const std::vector<char> & abi, const binary_extension<std::string> & memo);
-    [[eosio::action]] void setcode(const name & account, uint8_t vmtype, uint8_t vmversion, const std::vector<char> & code, const binary_extension<std::string> & memo){}
+    [[eosio::action]] void setcode(const name & account, uint8_t vmtype, uint8_t vmversion, const std::vector<char> & code, const binary_extension<std::string> & memo);
+    [[eosio::action]] void setcodeinfo(const name & account, const std::string & version, const std::string & source);
+    [[eosio::action]] void cleanfix(const name & account);
 
 // 1.CONFIG ACTIONS
     [[eosio::action]] void init(bool destruct, const std::string & memo);
     [[eosio::action]] void setparams(const blockchain_parameters_t & params);
     [[eosio::action]] void wasmcfg(const name & settings);
-    [[eosio::action]] void activate(const eosio::checksum256 & feature_digest);
-    [[eosio::action]] void setram(uint64_t max_ram_size);
+    [[eosio::action]] void activate(const checksum256 & feature_digest);
 
 // 2.ADMIN ACTIONS
     [[eosio::action]] void setwhitelist(const name & account, uint8_t depth);
@@ -551,7 +508,7 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     [[eosio::action]] void setacctram(const name & account);
 
 // 3.PRODUCERS ACTIONS
-    [[eosio::action]] void regproducer(const name & producer, const eosio::block_signing_authority & producer_authority, const std::string & url, const uint16_t & location);
+    [[eosio::action]] void regproducer(const name & producer, const block_signing_authority & producer_authority, const std::string & url, const uint16_t & location);
     [[eosio::action]] void unregprod(const name & producer);
 
     [[eosio::action]] void regfinkey(const name & finalizer_name, const std::string & finalizer_key, const std::string & proof_of_possession);
@@ -560,24 +517,15 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     [[eosio::action]] void switchtosvnn();
 
 // 4.TOKENOMICS ACTIONS
-    [[eosio::action]] void logsystemfee(const name & protocol, const asset & fee, const std::string & memo);
-    [[eosio::action]] void feedthebeast(eosio::checksum256 & seed);
+    [[eosio::action]] void feedthebeast(checksum256 & seed);
     [[eosio::action]] void onblock(ignore<block_header> header);
     [[eosio::action]] void onchunk();
 
-    [[eosio::action]] void claimrewards(const name & owner);
-
-// 5.USER ACTIONS
-    [[eosio::action]] void voteproducer(const name & voter, const name & proxy, const std::vector<name> & producers);
-    [[eosio::action]] void voteupdate(const name & voter_name);
-    [[eosio::action]] void regproxy(const name & proxy, bool isproxy);
-
-    [[eosio::action]] void bidname(const name & bidder, const name & newname, const asset & bid);
-    [[eosio::action]] void bidrefund(const name & bidder, const name & newname);
-
+// 5. LOGS ACTIONS
+    [[eosio::action]] void logsystemfee(const name & protocol, const asset & fee, const std::string & memo);
   private:
 
-// 3.FINALIZERS FUNCTIONS
+// 3.PRODUCERS FUNCTIONS
     std::optional<std::vector<systemcore::finalizer_auth_info>> _last_prop_finalizers_cached;
 
     eosio::bls_g1 to_binary(const std::string & finalizer_key);
@@ -592,15 +540,11 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     systemcore::_finalizers::const_iterator get_finalizer_itr(const name & finalizer_name, _finalizers & finalizers) const;
     uint64_t get_next_finalizer_key_id(_finkeyidgen & finkeyidgen);
 
-// 4.BLOCKS ACTIONS
     uint32_t block_height_from_id(const eosio::checksum256 & block_id) const;
     void add_to_blockinfo_table(const eosio::checksum256 & previous_block_id, const eosio::block_timestamp timestamp) const;
 
     systemcore::latest_block_batch_info_result get_latest_block_batch_info(uint32_t batch_start_height_offset, uint32_t batch_size, name system_account_name = name("eosio"));
 
+// 4.TOKENOMICS FUNCTIONS
     void on_a_lucky_block(name & producer, checksum256 & previous_block_id);
-
-// 5.VOTING FUNCTIONS
-    int64_t update_voting_power(const name & voter, const asset & total_update);
-    void update_votes(const name & voter, const name & proxy, const std::vector<name> & producers, bool voting);
 };

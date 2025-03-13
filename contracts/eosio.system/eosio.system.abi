@@ -61,20 +61,6 @@
             ]
         },
         {
-            "name": "_bidrefunds_s",
-            "base": "",
-            "fields": [
-                {
-                    "name": "bidder",
-                    "type": "name"
-                },
-                {
-                    "name": "amount",
-                    "type": "asset"
-                }
-            ]
-        },
-        {
             "name": "_blockinfo_s",
             "base": "",
             "fields": [
@@ -89,6 +75,32 @@
                 {
                     "name": "block_timestamp",
                     "type": "time_point"
+                }
+            ]
+        },
+        {
+            "name": "_contractinfo_s",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "version",
+                    "type": "string"
+                },
+                {
+                    "name": "source",
+                    "type": "string"
+                },
+                {
+                    "name": "abi",
+                    "type": "temporal_256"
+                },
+                {
+                    "name": "code",
+                    "type": "temporal_256"
                 }
             ]
         },
@@ -217,28 +229,6 @@
             ]
         },
         {
-            "name": "_namebids_s",
-            "base": "",
-            "fields": [
-                {
-                    "name": "newname",
-                    "type": "name"
-                },
-                {
-                    "name": "high_bidder",
-                    "type": "name"
-                },
-                {
-                    "name": "high_bid",
-                    "type": "int64"
-                },
-                {
-                    "name": "last_bid_time",
-                    "type": "time_point"
-                }
-            ]
-        },
-        {
             "name": "_producers_s",
             "base": "",
             "fields": [
@@ -281,20 +271,6 @@
             ]
         },
         {
-            "name": "_schedules_s",
-            "base": "",
-            "fields": [
-                {
-                    "name": "start_time",
-                    "type": "time_point_sec"
-                },
-                {
-                    "name": "continuous_rate",
-                    "type": "float64"
-                }
-            ]
-        },
-        {
             "name": "_userres_s",
             "base": "",
             "fields": [
@@ -313,52 +289,6 @@
                 {
                     "name": "ram_bytes",
                     "type": "int64"
-                }
-            ]
-        },
-        {
-            "name": "_voters_s",
-            "base": "",
-            "fields": [
-                {
-                    "name": "owner",
-                    "type": "name"
-                },
-                {
-                    "name": "proxy",
-                    "type": "name"
-                },
-                {
-                    "name": "producers",
-                    "type": "name[]"
-                },
-                {
-                    "name": "staked",
-                    "type": "int64"
-                },
-                {
-                    "name": "last_vote_weight",
-                    "type": "float64"
-                },
-                {
-                    "name": "proxied_vote_weight",
-                    "type": "float64"
-                },
-                {
-                    "name": "is_proxy",
-                    "type": "bool"
-                },
-                {
-                    "name": "flags1",
-                    "type": "uint32"
-                },
-                {
-                    "name": "reserved2",
-                    "type": "uint32"
-                },
-                {
-                    "name": "reserved3",
-                    "type": "asset"
                 }
             ]
         },
@@ -419,38 +349,6 @@
                 {
                     "name": "waits",
                     "type": "wait_weight[]"
-                }
-            ]
-        },
-        {
-            "name": "bidname",
-            "base": "",
-            "fields": [
-                {
-                    "name": "bidder",
-                    "type": "name"
-                },
-                {
-                    "name": "newname",
-                    "type": "name"
-                },
-                {
-                    "name": "bid",
-                    "type": "asset"
-                }
-            ]
-        },
-        {
-            "name": "bidrefund",
-            "base": "",
-            "fields": [
-                {
-                    "name": "bidder",
-                    "type": "name"
-                },
-                {
-                    "name": "newname",
-                    "type": "name"
                 }
             ]
         },
@@ -595,11 +493,11 @@
             ]
         },
         {
-            "name": "claimrewards",
+            "name": "cleanfix",
             "base": "",
             "fields": [
                 {
-                    "name": "owner",
+                    "name": "account",
                     "type": "name"
                 }
             ]
@@ -916,20 +814,6 @@
             ]
         },
         {
-            "name": "regproxy",
-            "base": "",
-            "fields": [
-                {
-                    "name": "proxy",
-                    "type": "name"
-                },
-                {
-                    "name": "isproxy",
-                    "type": "bool"
-                }
-            ]
-        },
-        {
             "name": "rmvproducer",
             "base": "",
             "fields": [
@@ -994,6 +878,24 @@
             ]
         },
         {
+            "name": "setcodeinfo",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "version",
+                    "type": "string"
+                },
+                {
+                    "name": "source",
+                    "type": "string"
+                }
+            ]
+        },
+        {
             "name": "setparams",
             "base": "",
             "fields": [
@@ -1018,16 +920,6 @@
             ]
         },
         {
-            "name": "setram",
-            "base": "",
-            "fields": [
-                {
-                    "name": "max_ram_size",
-                    "type": "uint64"
-                }
-            ]
-        },
-        {
             "name": "setwhitelist",
             "base": "",
             "fields": [
@@ -1045,6 +937,20 @@
             "name": "switchtosvnn",
             "base": "",
             "fields": []
+        },
+        {
+            "name": "temporal_256",
+            "base": "",
+            "fields": [
+                {
+                    "name": "time",
+                    "type": "time_point"
+                },
+                {
+                    "name": "hash",
+                    "type": "checksum256"
+                }
+            ]
         },
         {
             "name": "unlinkauth",
@@ -1105,34 +1011,6 @@
             ]
         },
         {
-            "name": "voteproducer",
-            "base": "",
-            "fields": [
-                {
-                    "name": "voter",
-                    "type": "name"
-                },
-                {
-                    "name": "proxy",
-                    "type": "name"
-                },
-                {
-                    "name": "producers",
-                    "type": "name[]"
-                }
-            ]
-        },
-        {
-            "name": "voteupdate",
-            "base": "",
-            "fields": [
-                {
-                    "name": "voter_name",
-                    "type": "name"
-                }
-            ]
-        },
-        {
             "name": "wait_weight",
             "base": "",
             "fields": [
@@ -1169,23 +1047,13 @@
             "ricardian_contract": ""
         },
         {
-            "name": "bidname",
-            "type": "bidname",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "bidrefund",
-            "type": "bidrefund",
-            "ricardian_contract": ""
-        },
-        {
             "name": "canceldelay",
             "type": "canceldelay",
             "ricardian_contract": ""
         },
         {
-            "name": "claimrewards",
-            "type": "claimrewards",
+            "name": "cleanfix",
+            "type": "cleanfix",
             "ricardian_contract": ""
         },
         {
@@ -1254,11 +1122,6 @@
             "ricardian_contract": ""
         },
         {
-            "name": "regproxy",
-            "type": "regproxy",
-            "ricardian_contract": ""
-        },
-        {
             "name": "rmvproducer",
             "type": "rmvproducer",
             "ricardian_contract": ""
@@ -1279,6 +1142,11 @@
             "ricardian_contract": ""
         },
         {
+            "name": "setcodeinfo",
+            "type": "setcodeinfo",
+            "ricardian_contract": ""
+        },
+        {
             "name": "setparams",
             "type": "setparams",
             "ricardian_contract": ""
@@ -1286,11 +1154,6 @@
         {
             "name": "setpriv",
             "type": "setpriv",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "setram",
-            "type": "setram",
             "ricardian_contract": ""
         },
         {
@@ -1319,16 +1182,6 @@
             "ricardian_contract": ""
         },
         {
-            "name": "voteproducer",
-            "type": "voteproducer",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "voteupdate",
-            "type": "voteupdate",
-            "ricardian_contract": ""
-        },
-        {
             "name": "wasmcfg",
             "type": "wasmcfg",
             "ricardian_contract": ""
@@ -1350,15 +1203,15 @@
             "key_types": []
         },
         {
-            "name": "bidrefunds",
-            "type": "_bidrefunds_s",
+            "name": "blockinfo",
+            "type": "_blockinfo_s",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
         },
         {
-            "name": "blockinfo",
-            "type": "_blockinfo_s",
+            "name": "contractinfo",
+            "type": "_contractinfo_s",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
@@ -1406,13 +1259,6 @@
             "key_types": []
         },
         {
-            "name": "namebids",
-            "type": "_namebids_s",
-            "index_type": "i64",
-            "key_names": [],
-            "key_types": []
-        },
-        {
             "name": "producers",
             "type": "_producers_s",
             "index_type": "i64",
@@ -1420,22 +1266,8 @@
             "key_types": []
         },
         {
-            "name": "schedules",
-            "type": "_schedules_s",
-            "index_type": "i64",
-            "key_names": [],
-            "key_types": []
-        },
-        {
             "name": "userres",
             "type": "_userres_s",
-            "index_type": "i64",
-            "key_names": [],
-            "key_types": []
-        },
-        {
-            "name": "voters",
-            "type": "_voters_s",
             "index_type": "i64",
             "key_names": [],
             "key_types": []

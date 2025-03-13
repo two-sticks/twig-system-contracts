@@ -32,25 +32,28 @@ class RandomnessProvider
       return new_seed;
     }
 
-    eosio::checksum256 get_blend(eosio::checksum256 seed, uint64_t pepper = u32_max)
+    void blend(eosio::checksum256 seed, uint64_t pepper = u32_max)
     {
       pepper = pepper > 1000 ? pepper : u32_max;
-      std::array<uint8_t, 32> raw32 = seed.extract_as_byte_array();
-      std::array<uint8_t, 64> raw64;
+      raw32 = seed.extract_as_byte_array();
       for (uint8_t i = 0; i <32; i++){
         raw64[i * 2] = raw32[i];
         raw64[i * 2 + 1] = seed_bytes[i];
       }
 
-      eosio::checksum512 pass512 = eosio::sha512((char *)raw64.data(), 64);
+      pass512 = eosio::sha512((char *)raw64.data(), 64);
       raw64 = pass512.extract_as_byte_array();
 
       for (uint8_t i = 0; i <32; i++){
         raw32[i] = raw64[i * 1.5 + 4];
         seed_bytes[i] = raw64[i * 2];
       }
-      eosio::checksum256 new_hash = eosio::sha256((char *)raw32.data(), 32);
-      return new_hash;
+    }
+
+    eosio::checksum256 get_blend(eosio::checksum256 seed, uint64_t pepper = u32_max)
+    {
+      blend(seed, pepper);
+      return eosio::checksum256(eosio::sha256((char *)raw32.data(), 32));
     }
 
 
@@ -96,6 +99,12 @@ class RandomnessProvider
   private:
 
   std::array<uint8_t, 32> seed_bytes;
+
+  std::array<uint8_t, 32> raw32;
+  std::array<uint8_t, 64> raw64;
+
+  eosio::checksum512 pass512;
+
   uint64_t salt;
   uint64_t cycle;
 
