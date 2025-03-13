@@ -78,7 +78,7 @@ void namebidding::bidname(const name & bidder, const name & newname, const asset
   check(bid.amount > 0, "insufficient bid");
 
   // Pushes directly
-  eosio::action(permission_level{get_self(), name("active")}, token_account, name("transfer"),
+  eosio::action(permission_level{bidder, name("active")}, token_account, name("transfer"),
     std::make_tuple(
       bidder,
       get_self(),

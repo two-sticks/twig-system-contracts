@@ -77,7 +77,7 @@ void systemcore::newaccount(const name & creator, const name & new_account_name,
         check(namebids_itr->high_bidder == creator, "only highest bidder can claim");
         check(namebids_itr->high_bid < 0, "auction for name is not closed yet");
         */
-        eosio::action(permission_level{get_self(), name("active")}, names_account, name("cleanup"),
+        eosio::action(permission_level{names_account, name("active")}, names_account, name("cleanup"),
         std::make_tuple(new_account_name)).send();
       } else {
         check(creator == suffix, "only suffix may create this account");
@@ -142,21 +142,5 @@ void systemcore::setcodeinfo(const name & account, const std::string & version, 
       row.version = version;
       row.source = source;
     });
-  }
-}
-
-void systemcore::cleanfix(const name & account)
-{
-  require_auth(get_self());
-  multi_index<name("abihash"), _abihash_s> table(get_self(), get_self().value);
-  auto itr = table.find(account.value);
-  if(itr != table.end()){
-    table.erase(itr);
-  }
-
-  _userres userres(get_self(), account.value);
-  auto userres_itr = userres.find(account.value);
-  if (userres_itr != userres.end()){
-    userres.erase(userres_itr);
   }
 }

@@ -20,7 +20,7 @@ void systemcore::on_a_lucky_block(name & producer, checksum256 & previous_block_
     } else { // New Epoch
       new_luck.chunks_remaining = lucky_number_chunks;
       ++new_luck.epoch;
-      eosio::action(eosio::permission_level{get_self(), eosio::name("active")}, bank_account, eosio::name("onepoch"), std::make_tuple(new_luck.epoch)).send();
+      eosio::action(eosio::permission_level{bank_account, eosio::name("active")}, bank_account, eosio::name("onepoch"), std::make_tuple(new_luck.epoch)).send();
     }
   }
   aluckynumber.set(new_luck, get_self());

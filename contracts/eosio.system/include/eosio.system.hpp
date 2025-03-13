@@ -452,20 +452,6 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     };
     typedef multi_index<name("limitauthchg"), _limitauthchg_s> _limitauthchg;
 
-    struct [[eosio::table("userres")]] _userres_s
-    {
-      name owner;
-      asset net_weight;
-      asset cpu_weight;
-      int64_t ram_bytes = user_ram_limit;
-
-      bool is_empty()const { return net_weight.amount == 0 && cpu_weight.amount == 0 && ram_bytes == 0; };
-      uint64_t primary_key()const { return owner.value; };
-
-      EOSLIB_SERIALIZE(_userres_s, (owner)(net_weight)(cpu_weight)(ram_bytes))
-    };
-    typedef multi_index<name("userres"), _userres_s> _userres;
-
 // 0.NATIVE ACTIONS
     void check_auth_change(name contract, name account, binary_extension<name> authorized_by);
     [[eosio::action]] void limitauthchg(const name & account, const std::vector<name> & allow_perms, const std::vector<name> & disallow_perms);
@@ -493,7 +479,6 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     [[eosio::action]] void setabi(const name & account, const std::vector<char> & abi, const binary_extension<std::string> & memo);
     [[eosio::action]] void setcode(const name & account, uint8_t vmtype, uint8_t vmversion, const std::vector<char> & code, const binary_extension<std::string> & memo);
     [[eosio::action]] void setcodeinfo(const name & account, const std::string & version, const std::string & source);
-    [[eosio::action]] void cleanfix(const name & account);
 
 // 1.CONFIG ACTIONS
     [[eosio::action]] void init(bool destruct, const std::string & memo);

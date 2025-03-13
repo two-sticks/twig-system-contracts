@@ -271,28 +271,6 @@
             ]
         },
         {
-            "name": "_userres_s",
-            "base": "",
-            "fields": [
-                {
-                    "name": "owner",
-                    "type": "name"
-                },
-                {
-                    "name": "net_weight",
-                    "type": "asset"
-                },
-                {
-                    "name": "cpu_weight",
-                    "type": "asset"
-                },
-                {
-                    "name": "ram_bytes",
-                    "type": "int64"
-                }
-            ]
-        },
-        {
             "name": "_whitelist_s",
             "base": "",
             "fields": [
@@ -489,16 +467,6 @@
                 {
                     "name": "trx_id",
                     "type": "checksum256"
-                }
-            ]
-        },
-        {
-            "name": "cleanfix",
-            "base": "",
-            "fields": [
-                {
-                    "name": "account",
-                    "type": "name"
                 }
             ]
         },
@@ -1052,11 +1020,6 @@
             "ricardian_contract": ""
         },
         {
-            "name": "cleanfix",
-            "type": "cleanfix",
-            "ricardian_contract": ""
-        },
-        {
             "name": "deleteauth",
             "type": "deleteauth",
             "ricardian_contract": ""
@@ -1261,13 +1224,6 @@
         {
             "name": "producers",
             "type": "_producers_s",
-            "index_type": "i64",
-            "key_names": [],
-            "key_types": []
-        },
-        {
-            "name": "userres",
-            "type": "_userres_s",
             "index_type": "i64",
             "key_names": [],
             "key_types": []

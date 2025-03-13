@@ -61,39 +61,39 @@ void systemcore::onchunk()
   _aluckynumber aluckynumber(get_self(), get_self().value);
   auto new_luck = aluckynumber.get();
 
-  asset chunk_tokens = token::get_balance(token_account, chunks_account, core_symbol.code());
+  asset chunks_tokens = token::get_balance(token_account, chunks_account, core_symbol.code());
 
   // Issue tokens
   if (new_luck.epoch < 20){
     auto tokens_to_issue = token::get_max_supply(token_account, core_symbol.code());
     tokens_to_issue.amount = tokens_to_issue.amount * lucky_number_chunk_weight;
-    chunk_tokens += tokens_to_issue;
+    chunks_tokens += tokens_to_issue;
     // Add in checks to not overmint from the max supply -> later
-    eosio::action(permission_level{get_self(), name("active")}, token_account, name("issue"),
+    eosio::action(permission_level{chunks_account, name("active")}, token_account, name("issue"),
       std::make_tuple(chunks_account, tokens_to_issue, (std::string)"A chunk has been found! Distributing rewards...")).send();
   }
 
   /// TEAM TOKENS ///
-  asset team_tokens = chunk_tokens;
+  asset team_tokens = chunks_tokens;
   team_tokens.amount = team_tokens.amount * lucky_number_team_weight;
-  eosio::action(permission_level{get_self(), name("active")}, token_account, name("transfer"),
+  eosio::action(permission_level{chunks_account, name("active")}, token_account, name("transfer"),
     std::make_tuple(chunks_account, bank_account, team_tokens, (std::string)"team_share")).send();
 
   /// LEADERBOARD TOKENS ///
-  asset board_tokens = chunk_tokens;
+  asset board_tokens = chunks_tokens;
   board_tokens.amount = board_tokens.amount * lucky_number_board_weight;
-  eosio::action(permission_level{get_self(), name("active")}, token_account, name("transfer"),
+  eosio::action(permission_level{chunks_account, name("active")}, token_account, name("transfer"),
     std::make_tuple(chunks_account, board_account, board_tokens, (std::string)"board_share")).send();
 
   /// PRODUCER TOKENS ///
-  asset producer_tokens = chunk_tokens;
+  asset producer_tokens = chunks_tokens;
   producer_tokens.amount = producer_tokens.amount * lucky_number_producer_weight;
-  eosio::action(permission_level{get_self(), name("active")}, token_account, name("transfer"),
+  eosio::action(permission_level{chunks_account, name("active")}, token_account, name("transfer"),
     std::make_tuple(chunks_account, bank_account, producer_tokens, (std::string)"producer_share")).send();
 
   /// CHUNK -> WORLD TOKENS ///
-  chunk_tokens.amount = chunk_tokens.amount * lucky_number_world_weight;
-  eosio::action(permission_level{get_self(), name("active")}, token_account, name("transfer"),
-    std::make_tuple(chunks_account, world_account, chunk_tokens, (std::string)"Refilling World...")).send();
+  chunks_tokens.amount = chunks_tokens.amount * lucky_number_world_weight;
+  eosio::action(permission_level{chunks_account, name("active")}, token_account, name("transfer"),
+    std::make_tuple(chunks_account, world_account, chunks_tokens, (std::string)"Refilling World...")).send();
 }
 
