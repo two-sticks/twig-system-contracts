@@ -58,7 +58,7 @@ void systemcore::newaccount(const name & creator, const name & new_account_name,
   _whitelist whitelist(get_self(), get_self().value);
   auto whitelist_itr = whitelist.find(creator.value);
 
-  if((creator != get_self()) || (whitelist_itr != whitelist.end() && whitelist_itr->depth >= 3)){
+  if((creator != get_self()) || (whitelist_itr == whitelist.end()) || (whitelist_itr != whitelist.end() && whitelist_itr->depth <= 3)){
     uint64_t tmp = new_account_name.value >> 4;
     bool has_dot = false;
 

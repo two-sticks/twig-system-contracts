@@ -12,7 +12,7 @@ void systemcore::init(bool destruct, const std::string & memo)
     get_blockchain_parameters(dp);
 
     global.set(dp, get_self());
-    aluckynumber.set(_aluckynumber_s{}, get_self());
+    aluckynumber.set(_aluckynumber_s{.producer = name("eosio")}, get_self());
   }
   auto system_token_supply = token::get_supply(token_account, core_symbol.code());
   check(system_token_supply.symbol == core_symbol, "specified core symbol does not exist (precision mismatch)");
