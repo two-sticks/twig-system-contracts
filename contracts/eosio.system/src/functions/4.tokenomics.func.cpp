@@ -23,5 +23,7 @@ void systemcore::on_a_lucky_block(name & producer, checksum256 & previous_block_
       eosio::action(eosio::permission_level{bank_account, eosio::name("active")}, bank_account, eosio::name("onepoch"), std::make_tuple(new_luck.epoch)).send();
     }
   }
+
+  // TO DO -> Function that lowers & increases the odds based on the rate of progress, i.e. entropy management
   aluckynumber.set(new_luck, get_self());
 }

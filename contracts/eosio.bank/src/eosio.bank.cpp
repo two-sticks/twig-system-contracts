@@ -6,16 +6,12 @@ void bank::token_deposit(name from, name to, asset quantity, std::string memo)
     return;
   }
 
-  block_timestamp timestamp;
-  name producer;
-  _ds >> timestamp >> producer;
-
   systemcore::_aluckynumber aluckynumber_(system_account, system_account.value);
   auto aluckynumber = aluckynumber_.get();
 
   _vesting vesting(get_self(), get_self().value);
 
-  producer = memo == "team_share" ? team_account : memo == "producer_share" ? producer : name(0);
+  name producer = memo == "team_share" ? team_account : memo == "producer_share" ? aluckynumber.producer : name(0);
   check(producer.value != 0, "invalid memo");
 
   auto vesting_itr = vesting.find(producer.value);

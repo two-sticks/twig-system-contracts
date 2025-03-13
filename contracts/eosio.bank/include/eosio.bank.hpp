@@ -5,6 +5,8 @@
 #include <eosio/crypto.hpp>
 #include <eosio/permission.hpp>
 #include <eosio/binary_extension.hpp>
+#include <eosio/datastream.hpp>
+#include <eosio/dispatcher.hpp>
 #include <eosio/ignore.hpp>
 #include <eosio/transaction.hpp>
 #include <eosio/singleton.hpp>
