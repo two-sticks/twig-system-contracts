@@ -136,10 +136,10 @@ void systemcore::update_elected_producers(const block_timestamp & block_time)
 
   new_producers.reserve(top_producers.size());
   for(auto & item : top_producers)
-      new_producers.push_back(std::move(item.first));
+    new_producers.push_back(std::move(item.first));
 
   if(set_proposed_producers(new_producers) >= 0){
-      _gstate.last_producer_schedule_size = static_cast<decltype(_gstate.last_producer_schedule_size)>(new_producers.size());
+    _gstate.last_producer_schedule_size = static_cast<decltype(_gstate.last_producer_schedule_size)>(new_producers.size());
   }
 
   global.set(_gstate, get_self());

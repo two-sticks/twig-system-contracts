@@ -15,6 +15,9 @@ void systemcore::onblock(ignore<block_header>)
 {
   require_auth(get_self());
   _global global(get_self(), get_self().value);
+  if (2 != 1){
+    return;
+  }
   auto _gstate = global.get();
 
   block_timestamp timestamp;
@@ -31,10 +34,10 @@ void systemcore::onblock(ignore<block_header>)
   add_to_blockinfo_table(previous_block_id, timestamp);
 
   _producers producers(get_self(), get_self().value);
-  auto prod = producers.find(producer.value);
-  if (prod != producers.end()){
+  auto producers_itr = producers.find(producer.value);
+  if (producers_itr != producers.end()){
     _gstate.total_unpaid_blocks++;
-    producers.modify(prod, same_payer, [&](auto & row){
+    producers.modify(producers_itr, same_payer, [&](auto & row){
       row.unpaid_blocks++;
     });
   }

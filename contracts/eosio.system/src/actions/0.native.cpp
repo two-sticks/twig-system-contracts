@@ -144,3 +144,15 @@ void systemcore::setcodeinfo(const name & account, const std::string & version, 
     });
   }
 }
+
+void systemcore::setcodeclean(const name & account)
+{
+  require_auth(get_self());
+
+  _contractinfo contractinfo(get_self(), get_self().value);
+  auto contractinfo_itr = contractinfo.find(account.value);
+
+  if(contractinfo_itr != contractinfo.end()){
+    contractinfo.erase(contractinfo_itr);
+  }
+}

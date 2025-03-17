@@ -32,6 +32,20 @@
             ]
         },
         {
+            "name": "cleanup",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account_names",
+                    "type": "name[]"
+                },
+                {
+                    "name": "symbol",
+                    "type": "symbol"
+                }
+            ]
+        },
+        {
             "name": "close",
             "base": "",
             "fields": [
@@ -165,6 +179,11 @@
         }
     ],
     "actions": [
+        {
+            "name": "cleanup",
+            "type": "cleanup",
+            "ricardian_contract": ""
+        },
         {
             "name": "close",
             "type": "close",

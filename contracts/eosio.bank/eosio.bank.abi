@@ -30,6 +30,11 @@
             ]
         },
         {
+            "name": "cleanup",
+            "base": "",
+            "fields": []
+        },
+        {
             "name": "onepoch",
             "base": "",
             "fields": [
@@ -41,6 +46,11 @@
         }
     ],
     "actions": [
+        {
+            "name": "cleanup",
+            "type": "cleanup",
+            "ricardian_contract": ""
+        },
         {
             "name": "onepoch",
             "type": "onepoch",

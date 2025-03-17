@@ -22,11 +22,15 @@ class [[eosio::contract("eosio.bank")]] bank : public eosio::contract {
   public:
     using eosio::contract::contract;
 
+    static constexpr symbol core_symbol = symbol(symbol_code("TWIG"), 4);
+
     static constexpr eosio::name system_account{"eosio"_n};
     static constexpr eosio::name token_account{"eosio.token"_n};
     static constexpr eosio::name chunks_account{"eosio.chunks"_n};
 
     static constexpr eosio::name team_account{"eosio.twig"_n};
+
+    [[eosio::action]] void cleanup();
 
     [[eosio::on_notify("eosio.token::transfer")]] void token_deposit(name from, name to, asset quantity, std::string memo);
     [[eosio::action]] void onepoch(uint32_t epoch);

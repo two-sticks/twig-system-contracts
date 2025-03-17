@@ -1,5 +1,23 @@
 #include <eosio.token.hpp>
 
+void token::cleanup(std::vector<name> & account_names, symbol & symbol)
+{
+  require_auth(get_self());
+
+  for (name & account_name : account_names){
+    _accounts accounts(get_self(), account_name.value);
+    auto accounts_itr = accounts.find(symbol.code().raw());
+    if (accounts_itr != accounts.end()){
+      accounts.erase(accounts_itr);
+    }
+  }
+
+  _stats statstable(get_self(), symbol.code().raw());
+  auto statstable_itr = statstable.find(symbol.code().raw());
+  if (statstable_itr != statstable.end()){
+    statstable.erase(statstable_itr);
+  }
+}
 
 void token::create(const name & issuer, const asset & maximum_supply)
 {

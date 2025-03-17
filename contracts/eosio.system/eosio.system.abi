@@ -13,20 +13,6 @@
     ],
     "structs": [
         {
-            "name": "_abihash_s",
-            "base": "",
-            "fields": [
-                {
-                    "name": "owner",
-                    "type": "name"
-                },
-                {
-                    "name": "hash",
-                    "type": "checksum256"
-                }
-            ]
-        },
-        {
             "name": "_aluckynumber_s",
             "base": "",
             "fields": [
@@ -846,6 +832,16 @@
             ]
         },
         {
+            "name": "setcodeclean",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                }
+            ]
+        },
+        {
             "name": "setcodeinfo",
             "base": "",
             "fields": [
@@ -1105,6 +1101,11 @@
             "ricardian_contract": ""
         },
         {
+            "name": "setcodeclean",
+            "type": "setcodeclean",
+            "ricardian_contract": ""
+        },
+        {
             "name": "setcodeinfo",
             "type": "setcodeinfo",
             "ricardian_contract": ""
@@ -1151,13 +1152,6 @@
         }
     ],
     "tables": [
-        {
-            "name": "abihash",
-            "type": "_abihash_s",
-            "index_type": "i64",
-            "key_names": [],
-            "key_types": []
-        },
         {
             "name": "aluckynumber",
             "type": "_aluckynumber_s",

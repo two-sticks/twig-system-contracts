@@ -1,8 +1,20 @@
 #include <eosio.bank.hpp>
 
+void bank::cleanup()
+{
+  require_auth(get_self());
+
+  _vesting vesting(get_self(), get_self().value);
+
+  auto vesting_itr = vesting.begin();
+  while (vesting_itr != vesting.end()){
+    vesting_itr = vesting.erase(vesting_itr);
+  }
+}
+
 void bank::token_deposit(name from, name to, asset quantity, std::string memo)
 {
-  if (to != get_self() || from == get_self() || from != chunks_account || memo == "ignore_memo"){
+  if (to != get_self() || from == get_self() || from != chunks_account || memo == "ignore_memo" || quantity.symbol != core_symbol){
     return;
   }
 

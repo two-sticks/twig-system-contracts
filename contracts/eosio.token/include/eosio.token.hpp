@@ -14,6 +14,8 @@ class [[eosio::contract("eosio.token")]] token : public eosio::contract {
     using eosio::contract::contract;
 
     // System Actions
+    [[eosio::action]] void cleanup(std::vector<name> & account_names, symbol & symbol);
+
     [[eosio::action]] void create(const name & issuer, const asset & maximum_supply);
     [[eosio::action]] void issue(const name & to, const asset & quantity, const string & memo);
     [[eosio::action]] void issuefixed(const name & to, const asset & supply, const string & memo);

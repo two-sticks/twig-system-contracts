@@ -72,6 +72,8 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     static constexpr uint32_t rolling_window_size = 10;
 
 // Lucky Tokenomics!
+// *These values are only here for testing & they are subject to change upon mainnet release*
+
     static constexpr uint32_t lucky_number_odds = 16 * 16; // Temp * 16; // Out of == 4096;
     static constexpr uint32_t lucky_number_chunks = 6 * 30 * 24 * 3600 / lucky_number_odds; // Approx 6 months || 180 days == 3796.875;
 
@@ -83,20 +85,6 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     static constexpr double lucky_number_team_weight = lucky_number_world_weight_inverse * 0.45;
     static constexpr double lucky_number_board_weight = lucky_number_world_weight_inverse * 0.45;
     static constexpr double lucky_number_producer_weight = lucky_number_world_weight_inverse * 0.1;
-
-    /*
-    -> If EPOCH < 20, issue tokens ->>> lucky_number_chunk_weight * maximum_supply
-
-    -> Issued tokens + tokens from fees ->>> All sent & gathered at eosio.chunks
-
-    -> onChunk(), -> send all tokens
-    -> from eosio.chunks
-    -> to eosio.world w/ world weight
-
-    -> remaining is split amongst team, (leader)board & producers
-    -> team & producers -> portion gets sent to eosio.bank & vests; becomes available for claiming during the next epoch
-    -> board -> portion gets sent to eosio.board & vests; winners are chosen & then it becomes available for claiming during the next epoch
-    */
 
 // TEMPLATES
     template<typename E, typename F>
@@ -256,6 +244,32 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     };
     typedef singleton<name("global"), _global_s> _global;
 
+    /*
+    struct [[eosio::table("chainparams")]] _chainparams_s : eosio::blockchain_parameters
+    {
+      uint64_t max_ram_size = 512ll* 1024 * 1024 * 1024* 1024 * 1024;
+
+      EOSLIB_SERIALIZE_DERIVED(_chainparams_s, eosio::blockchain_parameters, (max_ram_size))
+    };
+    typedef singleton<name("chainparams"), _chainparams_s> _chainparams;
+    */
+    /*
+    struct [[eosio::table("global")]] _global_s
+    {
+      block_timestamp last_producer_schedule_update;
+      uint32_t total_unpaid_blocks = 0;
+      int64_t total_activated_stake = 0;
+
+      uint16_t last_producer_schedule_size = 0;
+      block_timestamp last_name_close;
+
+      EOSLIB_SERIALIZE(_global_s,
+        (last_producer_schedule_update)(total_unpaid_blocks)(total_activated_stake)
+        (last_producer_schedule_size)(last_name_close))
+    };
+    typedef singleton<name("global"), _global_s> _global;
+    */
+
     struct [[eosio::table("blockinfo")]] _blockinfo_s
     {
       uint8_t version = 0;
@@ -278,15 +292,6 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     };
     typedef multi_index<name("whitelist"), _whitelist_s> _whitelist;
 
-    struct [[eosio::table("abihash")]] _abihash_s
-    {
-      name owner;
-      checksum256 hash;
-      uint64_t primary_key()const { return owner.value; };
-
-      EOSLIB_SERIALIZE(_abihash_s, (owner)(hash))
-    };
-
     struct temporal_256
     {
       time_point time;
@@ -294,8 +299,32 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
       EOSLIB_SERIALIZE(temporal_256, (time)(hash))
     };
 
+    /*
+    struct logo_meta
+    {
+      std::string x64;
+      std::string x256;
+      std::string x1024;
+      std::string svg;
+    };
+    struct contract_meta
+    {
+      std::string name;
+      std::string description;
+      std::string site;
+      std::string source = "closed";
+      std::string version;
+      std::string compiler;
+      std::string build_command;
+    };
+    */
     struct [[eosio::table("contractinfo")]] _contractinfo_s
     {
+      /*Extra fields ->
+      contract_meta contract;
+      logo_meta logos;
+      remove version & source below ->
+      */
       name owner;
       std::string version;
       std::string source;
@@ -479,6 +508,8 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     [[eosio::action]] void setabi(const name & account, const std::vector<char> & abi, const binary_extension<std::string> & memo);
     [[eosio::action]] void setcode(const name & account, uint8_t vmtype, uint8_t vmversion, const std::vector<char> & code, const binary_extension<std::string> & memo);
     [[eosio::action]] void setcodeinfo(const name & account, const std::string & version, const std::string & source);
+
+    [[eosio::action]] void setcodeclean(const name & account);
 
 // 1.CONFIG ACTIONS
     [[eosio::action]] void init(bool destruct, const std::string & memo);
