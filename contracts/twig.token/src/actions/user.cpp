@@ -97,7 +97,14 @@ void token::transfer(const name & from, const name & to, const std::vector<asset
     row.balance = from_balance;
   });
 
-  accounts.modify(to_itr, get_self(), [&](auto & row){
-    row.balance = to_balance;
-  });
+  if (to_itr == accounts.end()){
+    accounts.emplace(get_self(), [&](auto & row){
+      row.owner = to;
+      row.balance = to_balance;
+    });
+  } else {
+    accounts.modify(to_itr, get_self(), [&](auto & row){
+      row.balance = to_balance;
+    });
+  }
 }
