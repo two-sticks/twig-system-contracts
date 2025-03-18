@@ -32,7 +32,7 @@ class [[eosio::contract("eosio.bank")]] bank : public eosio::contract {
 
     [[eosio::action]] void cleanup();
 
-    [[eosio::on_notify("twig.token::transfer")]] void token_deposit(name from, name to, std::vector<asset> tokens, std::string memo);
+    [[eosio::on_notify("eosio.token::transfer")]] void token_deposit(name from, name to, std::vector<asset> tokens, std::string memo);
     [[eosio::action]] void onepoch(uint32_t epoch);
 
 // TABLES
