@@ -37,15 +37,46 @@ void systemcore::rmvproducer(const name & producer)
   });
 }
 
-void systemcore::setacctram(const name & account)
+void systemcore::setrngcall(const uint64_t index, const name & contract, const name & action)
 {
   require_auth(get_self());
-  //comment out so that anyone can call it & fix their account if RAM is broken
 
-  int64_t current_ram, current_net, current_cpu;
-  get_resource_limits(account, current_ram, current_net, current_cpu);
+  _rngcalls rngcalls(get_self(), get_self().value);
+  auto rngcalls_itr = rngcalls.find(index);
+  if (rngcalls_itr == rngcalls.end()){
+    rngcalls.emplace(get_self(), [&](auto & row){
+      row.index = index;
+      row.contract = contract;
+      row.action = action;
+    });
+  } else {
+    rngcalls.modify(rngcalls_itr, get_self(), [&](auto & row){
+      row.contract = contract;
+      row.action = action;
+      row.active = 0;
+    });
+  }
+}
+void systemcore::rmvrngcall(const uint64_t index)
+{
+  require_auth(get_self());
 
-  current_ram = user_ram_limit;
+  _rngcalls rngcalls(get_self(), get_self().value);
+  auto rngcalls_itr = rngcalls.find(index);
+  if (rngcalls_itr != rngcalls.end()){
+    rngcalls.erase(rngcalls_itr);
+  }
+}
 
-  set_resource_limits(account, current_ram, current_net, current_cpu);
+void systemcore::modrngcall(const uint64_t index, const uint8_t active)
+{
+  require_auth(get_self());
+
+  _rngcalls rngcalls(get_self(), get_self().value);
+  auto rngcalls_itr = rngcalls.find(index);
+  if (rngcalls_itr != rngcalls.end()){
+    rngcalls.modify(rngcalls_itr, get_self(), [&](auto & row){
+      row.active = active;
+    });
+  }
 }

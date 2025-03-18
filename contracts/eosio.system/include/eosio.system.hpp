@@ -28,7 +28,7 @@
 #include <eosio/instant_finality.hpp>
 #include <eosio/transaction.hpp>
 
-#include <headers/eosio.token.hpp>
+#include <headers/twig.token.hpp>
 #include <headers/RandomnessProvider.hpp>
 
 using namespace eosio;
@@ -53,7 +53,6 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     static constexpr eosio::name savings_account{"eosio.saving"_n};
     static constexpr eosio::name names_account{"eosio.names"_n};
     static constexpr eosio::name null_account{"eosio.null"_n};
-
 
     static constexpr uint32_t seconds_per_year = 52 * 7 * 24 * 3600;
     static constexpr uint32_t seconds_per_day = 24 * 3600;
@@ -89,21 +88,19 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
 // TEMPLATES
     template<typename E, typename F>
     static inline auto has_field( F flags, E field )
-    -> std::enable_if_t< std::is_integral_v<F> && std::is_unsigned_v<F> &&
-                        std::is_enum_v<E> && std::is_same_v< F, std::underlying_type_t<E> >, bool>
+    -> std::enable_if_t< std::is_integral_v<F> && std::is_unsigned_v<F> && std::is_enum_v<E> && std::is_same_v< F, std::underlying_type_t<E> >, bool>
     {
       return ( (flags & static_cast<F>(field)) != 0 );
     }
 
     template<typename E, typename F>
     static inline auto set_field( F flags, E field, bool value = true )
-    -> std::enable_if_t< std::is_integral_v<F> && std::is_unsigned_v<F> &&
-                        std::is_enum_v<E> && std::is_same_v< F, std::underlying_type_t<E> >, F >
+    -> std::enable_if_t< std::is_integral_v<F> && std::is_unsigned_v<F> && std::is_enum_v<E> && std::is_same_v< F, std::underlying_type_t<E> >, F >
     {
       if( value )
-          return ( flags | static_cast<F>(field) );
+        return ( flags | static_cast<F>(field) );
       else
-          return ( flags & ~static_cast<F>(field) );
+        return ( flags & ~static_cast<F>(field) );
     }
 
 // STRUCTS //
@@ -205,7 +202,54 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
       uint32_t max_call_depth;
     };
 
+    struct contract_meta
+    {
+      std::string name;
+      std::string desc;
+      std::string site;
+      std::string source = "closed";
+      std::string version;
+      std::string compiler;
+      std::string build;
+      std::map<std::string, std::string> extras;
+      EOSLIB_SERIALIZE(contract_meta, (name)(desc)(site)(source)(version)(compiler)(build)(extras))
+    };
+
+    struct branding_meta
+    {
+      std::string x64;
+      std::string x256;
+      std::string x1024;
+      std::string svg;
+      std::map<std::string, std::string> extras;
+      EOSLIB_SERIALIZE(branding_meta, (x64)(x256)(x1024)(svg)(extras))
+    };
+
+    struct temporal_256
+    {
+      time_point time;
+      checksum256 hash;
+      EOSLIB_SERIALIZE(temporal_256, (time)(hash))
+    };
+
 // TABLES //
+
+    struct [[eosio::table("chainparams")]] _chainparams_s : eosio::blockchain_parameters
+    {
+      uint64_t max_ram_size = 512ll* 1024 * 1024 * 1024* 1024 * 1024;
+
+      EOSLIB_SERIALIZE_DERIVED(_chainparams_s, eosio::blockchain_parameters, (max_ram_size))
+    };
+    typedef singleton<name("chainparams"), _chainparams_s> _chainparams;
+
+    struct [[eosio::table("global")]] _global_s
+    {
+      block_timestamp last_producer_schedule_update;
+      uint16_t last_producer_schedule_size = 0;
+
+      EOSLIB_SERIALIZE(_global_s, (last_producer_schedule_update)(last_producer_schedule_size))
+    };
+    typedef singleton<name("global"), _global_s> _global;
 
     struct [[eosio::table("aluckynumber")]] _aluckynumber_s
     {
@@ -222,53 +266,16 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     };
     typedef singleton<name("aluckynumber"), _aluckynumber_s> _aluckynumber;
 
-    struct [[eosio::table("global")]] _global_s : eosio::blockchain_parameters
+    struct [[eosio::table("rngcalls")]] _rngcalls_s
     {
-      uint64_t free_ram()const { return max_ram_size - total_ram_bytes_reserved; };
+      uint64_t index;
+      name contract;
+      name action;
+      uint8_t active = 0;
 
-      uint64_t max_ram_size = 512ll* 1024 * 1024 * 1024* 1024 * 1024;
-      uint64_t total_ram_bytes_reserved = 0;
-      int64_t total_ram_stake = 0;
-
-      block_timestamp last_producer_schedule_update;
-      uint32_t total_unpaid_blocks = 0;
-      int64_t total_activated_stake = 0;
-
-      uint16_t last_producer_schedule_size = 0;
-      block_timestamp last_name_close;
-
-      EOSLIB_SERIALIZE_DERIVED(_global_s, eosio::blockchain_parameters,
-        (max_ram_size)(total_ram_bytes_reserved)(total_ram_stake)
-        (last_producer_schedule_update)(total_unpaid_blocks)(total_activated_stake)
-        (last_producer_schedule_size)(last_name_close))
+      uint64_t primary_key() const { return index; };
     };
-    typedef singleton<name("global"), _global_s> _global;
-
-    /*
-    struct [[eosio::table("chainparams")]] _chainparams_s : eosio::blockchain_parameters
-    {
-      uint64_t max_ram_size = 512ll* 1024 * 1024 * 1024* 1024 * 1024;
-
-      EOSLIB_SERIALIZE_DERIVED(_chainparams_s, eosio::blockchain_parameters, (max_ram_size))
-    };
-    typedef singleton<name("chainparams"), _chainparams_s> _chainparams;
-    */
-    /*
-    struct [[eosio::table("global")]] _global_s
-    {
-      block_timestamp last_producer_schedule_update;
-      uint32_t total_unpaid_blocks = 0;
-      int64_t total_activated_stake = 0;
-
-      uint16_t last_producer_schedule_size = 0;
-      block_timestamp last_name_close;
-
-      EOSLIB_SERIALIZE(_global_s,
-        (last_producer_schedule_update)(total_unpaid_blocks)(total_activated_stake)
-        (last_producer_schedule_size)(last_name_close))
-    };
-    typedef singleton<name("global"), _global_s> _global;
-    */
+    typedef multi_index<name("rngcalls"), _rngcalls_s> _rngcalls;
 
     struct [[eosio::table("blockinfo")]] _blockinfo_s
     {
@@ -282,6 +289,19 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     };
     typedef multi_index<name("blockinfo"), _blockinfo_s> _blockinfo;
 
+    struct [[eosio::table("contractinfo")]] _contractinfo_s
+    {
+      name owner;
+      contract_meta contract;
+      branding_meta branding;
+      temporal_256 abi;
+      temporal_256 code;
+      uint64_t primary_key()const { return owner.value; };
+
+      EOSLIB_SERIALIZE(_contractinfo_s, (owner)(contract)(branding)(abi)(code))
+    };
+    typedef multi_index<name("contractinfo"), _contractinfo_s> _contractinfo;
+
     struct [[eosio::table("whitelist")]] _whitelist_s
     {
       name account;
@@ -291,50 +311,6 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
       EOSLIB_SERIALIZE(_whitelist_s, (account)(depth))
     };
     typedef multi_index<name("whitelist"), _whitelist_s> _whitelist;
-
-    struct temporal_256
-    {
-      time_point time;
-      checksum256 hash;
-      EOSLIB_SERIALIZE(temporal_256, (time)(hash))
-    };
-
-    /*
-    struct logo_meta
-    {
-      std::string x64;
-      std::string x256;
-      std::string x1024;
-      std::string svg;
-    };
-    struct contract_meta
-    {
-      std::string name;
-      std::string description;
-      std::string site;
-      std::string source = "closed";
-      std::string version;
-      std::string compiler;
-      std::string build_command;
-    };
-    */
-    struct [[eosio::table("contractinfo")]] _contractinfo_s
-    {
-      /*Extra fields ->
-      contract_meta contract;
-      logo_meta logos;
-      remove version & source below ->
-      */
-      name owner;
-      std::string version;
-      std::string source;
-      temporal_256 abi;
-      temporal_256 code;
-      uint64_t primary_key()const { return owner.value; };
-
-      EOSLIB_SERIALIZE(_contractinfo_s, (owner)(version)(source)(abi)(code))
-    };
-    typedef multi_index<name("contractinfo"), _contractinfo_s> _contractinfo;
 
     struct [[eosio::table("producers")]] _producers_s
     {
@@ -507,9 +483,8 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     [[eosio::action]] void newaccount(const name & creator, const name & name, ignore<authority> owner, ignore<authority> active);
     [[eosio::action]] void setabi(const name & account, const std::vector<char> & abi, const binary_extension<std::string> & memo);
     [[eosio::action]] void setcode(const name & account, uint8_t vmtype, uint8_t vmversion, const std::vector<char> & code, const binary_extension<std::string> & memo);
-    [[eosio::action]] void setcodeinfo(const name & account, const std::string & version, const std::string & source);
-
-    [[eosio::action]] void setcodeclean(const name & account);
+    [[eosio::action]] void setcodeinfo(const name & account, const contract_meta & contract, const branding_meta & branding);
+    [[eosio::action]] void cleanblocks();
 
 // 1.CONFIG ACTIONS
     [[eosio::action]] void init(bool destruct, const std::string & memo);
@@ -521,7 +496,10 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     [[eosio::action]] void setwhitelist(const name & account, uint8_t depth);
     [[eosio::action]] void setpriv(const name & account, uint8_t is_priv);
     [[eosio::action]] void rmvproducer(const name & producer);
-    [[eosio::action]] void setacctram(const name & account);
+
+    [[eosio::action]] void setrngcall(const uint64_t index, const name & contract, const name & action);
+    [[eosio::action]] void rmvrngcall(const uint64_t index);
+    [[eosio::action]] void modrngcall(const uint64_t index, const uint8_t active);
 
 // 3.PRODUCERS ACTIONS
     [[eosio::action]] void regproducer(const name & producer, const block_signing_authority & producer_authority, const std::string & url, const uint16_t & location);
@@ -537,11 +515,13 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
     [[eosio::action]] void onblock(ignore<block_header> header);
     [[eosio::action]] void onchunk();
 
-// 5. LOGS ACTIONS
+
+
+// 10. LOGS ACTIONS
     [[eosio::action]] void logsystemfee(const name & protocol, const asset & fee, const std::string & memo);
   private:
 
-// 3.PRODUCERS FUNCTIONS
+// PRODUCERS FUNCTIONS
     std::optional<std::vector<systemcore::finalizer_auth_info>> _last_prop_finalizers_cached;
 
     eosio::bls_g1 to_binary(const std::string & finalizer_key);
@@ -561,6 +541,7 @@ class [[eosio::contract("eosio.system")]] systemcore : public eosio::contract {
 
     systemcore::latest_block_batch_info_result get_latest_block_batch_info(uint32_t batch_start_height_offset, uint32_t batch_size, name system_account_name = name("eosio"));
 
-// 4.TOKENOMICS FUNCTIONS
-    void on_a_lucky_block(name & producer, checksum256 & previous_block_id);
+// TOKENOMICS FUNCTIONS
+    void on_a_lucky_block(name & producer, _aluckynumber_s & aluckynumber, RandomnessProvider & randomness_provider);
+    void process_rng_calls(_aluckynumber_s & aluckynumber, RandomnessProvider & randomness_provider);
 };

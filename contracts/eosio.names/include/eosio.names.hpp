@@ -10,7 +10,7 @@
 #include <eosio/singleton.hpp>
 #include <eosio/multi_index.hpp>
 
-#include <headers/eosio.token.hpp>
+#include <headers/twig.token.hpp>
 
 using namespace eosio;
 

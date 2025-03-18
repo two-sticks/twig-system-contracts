@@ -1,7 +1,7 @@
 {
-  "root": "src/eosio.token.cpp",
-  "contract": "eosio.token",
-  "output": "eosio.token",
+  "root": "src/twig.token.cpp",
+  "contract": "twig.token",
+  "output": "twig.token",
   "cdt":"https://github.com/AntelopeIO/cdt/releases/download/v4.1.0/cdt_4.1.0-1_amd64.deb",
   "flags":"cdt-cpp -O3 -lto-opt=O3 -fmerge-all-constants -faligned-allocation --no-missing-ricardian-clause -abigen"
 }

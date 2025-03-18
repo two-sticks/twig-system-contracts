@@ -84,10 +84,10 @@ void systemcore::set_proposed_finalizers(std::vector<systemcore::finalizer_auth_
 
 void systemcore::update_elected_producers(const block_timestamp & block_time)
 {
-  _global global(get_self(), get_self().value);
-  auto _gstate = global.get();
+  _global global_(get_self(), get_self().value);
+  auto global = global_.get();
 
-  _gstate.last_producer_schedule_update = block_time;
+  global.last_producer_schedule_update = block_time;
 
   _producers producers(get_self(), get_self().value);
   auto idx = producers.get_index<name("prototalvote")>();
@@ -123,7 +123,7 @@ void systemcore::update_elected_producers(const block_timestamp & block_time)
     );
   }
 
-  if(top_producers.size() == 0 || top_producers.size() < _gstate.last_producer_schedule_size){
+  if(top_producers.size() == 0 || top_producers.size() < global.last_producer_schedule_size){
     return;
   }
 
@@ -139,10 +139,10 @@ void systemcore::update_elected_producers(const block_timestamp & block_time)
     new_producers.push_back(std::move(item.first));
 
   if(set_proposed_producers(new_producers) >= 0){
-    _gstate.last_producer_schedule_size = static_cast<decltype(_gstate.last_producer_schedule_size)>(new_producers.size());
+    global.last_producer_schedule_size = static_cast<decltype(global.last_producer_schedule_size)>(new_producers.size());
   }
 
-  global.set(_gstate, get_self());
+  global_.set(global, get_self());
 
   _lastpropfins lastpropfins(get_self(), get_self().value);
   set_proposed_finalizers(std::move(proposed_finalizers), lastpropfins);
@@ -188,7 +188,7 @@ void systemcore::add_to_blockinfo_table(const eosio::checksum256 & previous_bloc
   const uint32_t new_block_height = block_height_from_id(previous_block_id) + 1;
   const auto new_block_timestamp = static_cast<eosio::time_point>(timestamp);
 
-  _blockinfo blockinfo(get_self(), 0);
+  _blockinfo blockinfo(get_self(), get_self().value);
 
   if (rolling_window_size > 0) {
     blockinfo.emplace(get_self(), [&](auto & row){

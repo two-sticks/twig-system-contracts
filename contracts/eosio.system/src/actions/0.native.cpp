@@ -124,7 +124,7 @@ void systemcore::setcode(const name & account, uint8_t vmtype, uint8_t vmversion
   }
 }
 
-void systemcore::setcodeinfo(const name & account, const std::string & version, const std::string & source)
+void systemcore::setcodeinfo(const name & account, const contract_meta & contract, const branding_meta & branding)
 {
   require_auth(account);
 
@@ -134,25 +134,25 @@ void systemcore::setcodeinfo(const name & account, const std::string & version, 
   if(contractinfo_itr == contractinfo.end()){
     contractinfo.emplace(account, [&](auto & row){
       row.owner = account;
-      row.version = version;
-      row.source = source;
+      row.contract = contract;
+      row.branding = branding;
     });
   } else {
     contractinfo.modify(contractinfo_itr, same_payer, [&](auto & row){
-      row.version = version;
-      row.source = source;
+      row.contract = contract;
+      row.branding = branding;
     });
   }
 }
 
-void systemcore::setcodeclean(const name & account)
+void systemcore::cleanblocks()
 {
   require_auth(get_self());
 
-  _contractinfo contractinfo(get_self(), get_self().value);
-  auto contractinfo_itr = contractinfo.find(account.value);
-
-  if(contractinfo_itr != contractinfo.end()){
-    contractinfo.erase(contractinfo_itr);
+  _blockinfo blockinfo(get_self(), 0);
+  auto blockinfo_itr = blockinfo.begin();
+  while (blockinfo_itr != blockinfo.end()){
+    blockinfo_itr = blockinfo.erase(blockinfo_itr);
   }
 }
+

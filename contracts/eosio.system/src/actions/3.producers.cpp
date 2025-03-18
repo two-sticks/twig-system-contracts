@@ -192,19 +192,19 @@ void systemcore::delfinkey(const name & finalizer_name, const std::string & fina
 void systemcore::switchtosvnn()
 {
   require_auth(get_self());
-  _global global(get_self(), get_self().value);
-  auto _gstate = global.get();
+  _global global_(get_self(), get_self().value);
+  auto global = global_.get();
 
   _lastpropfins lastpropfins(get_self(), get_self().value);
   check(!is_savanna_consensus(lastpropfins), "switchtosvnn can be run only once");
 
   std::vector<systemcore::finalizer_auth_info> proposed_finalizers;
-  proposed_finalizers.reserve(_gstate.last_producer_schedule_size);
+  proposed_finalizers.reserve(global.last_producer_schedule_size);
 
   _finalizers finalizers(get_self(), get_self().value);
   _producers producers(get_self(), get_self().value);
   auto idx = producers.get_index<name("prototalvote")>();
-  for(auto it = idx.cbegin(); it != idx.cend() && proposed_finalizers.size() < _gstate.last_producer_schedule_size && 0 < it->total_votes && it->active(); ++it){
+  for(auto it = idx.cbegin(); it != idx.cend() && proposed_finalizers.size() < global.last_producer_schedule_size && 0 < it->total_votes && it->active(); ++it){
       auto finalizer = finalizers.find(it->owner.value);
       if(finalizer == finalizers.end()){
         // The producer is not in finalizers table, indicating it does not have an, active registered finalizer key. Try next one.
@@ -217,8 +217,8 @@ void systemcore::switchtosvnn()
       proposed_finalizers.emplace_back(*finalizer);
   }
 
-  check(proposed_finalizers.size() == _gstate.last_producer_schedule_size,
-        "not enough top producers have registered finalizer keys, has " + std::to_string(proposed_finalizers.size()) + ", require " + std::to_string(_gstate.last_producer_schedule_size) );
+  check(proposed_finalizers.size() == global.last_producer_schedule_size,
+        "not enough top producers have registered finalizer keys, has " + std::to_string(proposed_finalizers.size()) + ", require " + std::to_string(global.last_producer_schedule_size) );
 
   set_proposed_finalizers(std::move(proposed_finalizers), lastpropfins);
   check(is_savanna_consensus(lastpropfins), "switching to Savanna failed");

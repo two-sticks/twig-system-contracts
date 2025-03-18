@@ -1,76 +1,77 @@
 void systemcore::feedthebeast(checksum256 & seed)
 {
-  require_auth(get_self());
-
-  _aluckynumber aluckynumber(get_self(), get_self().value);
-  auto new_luck = aluckynumber.get();
+  _aluckynumber aluckynumber_(get_self(), get_self().value);
+  auto aluckynumber = aluckynumber_.get();
 
   RandomnessProvider randomness_provider(seed);
-  new_luck.seed = randomness_provider.get_blend(new_luck.seed);
+  aluckynumber.seed = randomness_provider.get_blend(aluckynumber.seed);
 
-  aluckynumber.set(new_luck, get_self());
+  aluckynumber_.set(aluckynumber, get_self());
 }
 
 void systemcore::onblock(ignore<block_header>)
 {
   require_auth(get_self());
-  _global global(get_self(), get_self().value);
-  if (2 != 1){
-    return;
-  }
-  auto _gstate = global.get();
+  _global global_(get_self(), get_self().value);
+  auto global = global_.get();
+
+  _aluckynumber aluckynumber_(get_self(), get_self().value);
+  auto aluckynumber = aluckynumber_.get();
 
   block_timestamp timestamp;
   name producer;
   uint16_t confirmed;
   checksum256 previous_block_id;
-  checksum256 transaction_mroot;
-  checksum256 action_mroot;
 
-  _ds >> timestamp >> producer >> confirmed >> previous_block_id >> transaction_mroot >> action_mroot;
+  _ds >> timestamp >> producer >> confirmed >> previous_block_id;
   (void)confirmed;
 
-  // Add latest block information to blockinfo table.
   add_to_blockinfo_table(previous_block_id, timestamp);
 
-  _producers producers(get_self(), get_self().value);
-  auto producers_itr = producers.find(producer.value);
-  if (producers_itr != producers.end()){
-    _gstate.total_unpaid_blocks++;
-    producers.modify(producers_itr, same_payer, [&](auto & row){
-      row.unpaid_blocks++;
-    });
-  }
+  // Somewhere onBlock here, there needs to be the injection of the cycling ephemeral private_key & the commit-reveal validation check to prevent deterministic RNG prediction
 
-  on_a_lucky_block(producer, previous_block_id);
+  RandomnessProvider randomness_provider(aluckynumber.seed, aluckynumber.total_blocks + 1);
+  aluckynumber.seed = randomness_provider.get_blend(previous_block_id, (uint64_t)producer.value);
 
-  /// only update block producers once every minute, block_timestamp is in half seconds
-  if(timestamp.slot - _gstate.last_producer_schedule_update.slot > blocks_per_minute){
+  on_a_lucky_block(producer, aluckynumber, randomness_provider);
+  process_rng_calls(aluckynumber, randomness_provider);
+
+  // only update block producers once every minute, do extra work with finalizers & producers in the future ->>>
+  if(timestamp.slot - global.last_producer_schedule_update.slot > blocks_per_minute){
     update_elected_producers(timestamp);
-
-    if((timestamp.slot - _gstate.last_name_close.slot) > blocks_per_day){
-      // Namebids, daily trigger ->
-      //eosio::action(eosio::permission_level{names_account, name("active")}, names_account, name("exec"), std::make_tuple().send();
-    }
   }
 
-  global.set(_gstate, get_self());
+  global_.set(global, get_self());
+  aluckynumber_.set(aluckynumber, get_self());
+
+  /* Namebids, daily trigger ->
+  if((timestamp.slot - global.last_name_close.slot) > blocks_per_day){
+    //eosio::action(eosio::permission_level{names_account, name("active")}, names_account, name("exec"), std::make_tuple().send();
+  }
+  */
 }
 
 void systemcore::onchunk()
 {
   require_auth(get_self());
 
-  _aluckynumber aluckynumber(get_self(), get_self().value);
-  auto new_luck = aluckynumber.get();
+  _aluckynumber aluckynumber_(get_self(), get_self().value);
+  auto aluckynumber = aluckynumber_.get();
 
-  asset chunks_tokens = token::get_balance(token_account, chunks_account, core_symbol.code());
+  token::_accounts accounts(token_account, token_account.value);
+  auto chunks_balance = accounts.require_find(chunks_account.value, "chunks_account_missing");
+
+  asset chunks_tokens{chunks_balance->balance.find(core_symbol)->second, chunks_balance->balance.find(core_symbol)->first};
 
   // Issue tokens
-  if (new_luck.epoch < 20){
-    auto tokens_to_issue = token::get_max_supply(token_account, core_symbol.code());
-    tokens_to_issue.amount = tokens_to_issue.amount * lucky_number_chunk_weight;
-    chunks_tokens += tokens_to_issue;
+  if (aluckynumber.epoch < 21){
+    token::_supplies supplies_(token_account, token_account.value);
+    auto supplies = supplies_.get();
+
+    std::map<eosio::symbol, int64_t> tokens_to_issue;
+    tokens_to_issue.emplace(core_symbol, (int64_t)(supplies.max_supply.find(core_symbol)->second * lucky_number_chunk_weight));
+
+    chunks_tokens.amount += tokens_to_issue.find(core_symbol)->second;
     // Add in checks to not overmint from the max supply -> later
     eosio::action(permission_level{chunks_account, name("active")}, token_account, name("issue"),
       std::make_tuple(chunks_account, tokens_to_issue, (std::string)"A chunk has been found! Distributing rewards...")).send();
@@ -80,23 +81,23 @@ void systemcore::onchunk()
   asset team_tokens = chunks_tokens;
   team_tokens.amount = team_tokens.amount * lucky_number_team_weight;
   eosio::action(permission_level{chunks_account, name("active")}, token_account, name("transfer"),
-    std::make_tuple(chunks_account, bank_account, team_tokens, (std::string)"team_share")).send();
+    std::make_tuple(chunks_account, bank_account, (std::vector<asset>){team_tokens}, (std::string)"team_share")).send();
 
   /// LEADERBOARD TOKENS ///
   asset board_tokens = chunks_tokens;
   board_tokens.amount = board_tokens.amount * lucky_number_board_weight;
   eosio::action(permission_level{chunks_account, name("active")}, token_account, name("transfer"),
-    std::make_tuple(chunks_account, board_account, board_tokens, (std::string)"board_share")).send();
+    std::make_tuple(chunks_account, board_account, (std::vector<asset>){board_tokens}, (std::string)"board_share")).send();
 
   /// PRODUCER TOKENS ///
   asset producer_tokens = chunks_tokens;
   producer_tokens.amount = producer_tokens.amount * lucky_number_producer_weight;
   eosio::action(permission_level{chunks_account, name("active")}, token_account, name("transfer"),
-    std::make_tuple(chunks_account, bank_account, producer_tokens, (std::string)"producer_share")).send();
+    std::make_tuple(chunks_account, bank_account, (std::vector<asset>){producer_tokens}, (std::string)"producer_share")).send();
 
   /// CHUNK -> WORLD TOKENS ///
   chunks_tokens.amount = chunks_tokens.amount * lucky_number_world_weight;
   eosio::action(permission_level{chunks_account, name("active")}, token_account, name("transfer"),
-    std::make_tuple(chunks_account, world_account, chunks_tokens, (std::string)"Refilling World...")).send();
+    std::make_tuple(chunks_account, world_account, (std::vector<asset>){chunks_tokens}, (std::string)"Refilling World...")).send();
 }
 

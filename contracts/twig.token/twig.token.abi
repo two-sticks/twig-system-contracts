@@ -1,0 +1,644 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.2",
+    "types": [
+        {
+            "new_type_name": "fungible_drops",
+            "type": "fungible_rng[]"
+        },
+        {
+            "new_type_name": "fungible_pairs",
+            "type": "pair_symbol_int64[]"
+        },
+        {
+            "new_type_name": "fungible_params",
+            "type": "pair_symbol_fungible_meta[]"
+        },
+        {
+            "new_type_name": "i32v",
+            "type": "int32[]"
+        },
+        {
+            "new_type_name": "u64v",
+            "type": "uint64[]"
+        }
+    ],
+    "structs": [
+        {
+            "name": "_accounts_s",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "balance",
+                    "type": "fungible_pairs"
+                }
+            ]
+        },
+        {
+            "name": "_config_s",
+            "base": "",
+            "fields": [
+                {
+                    "name": "params",
+                    "type": "config_params"
+                }
+            ]
+        },
+        {
+            "name": "_drops_s",
+            "base": "",
+            "fields": [
+                {
+                    "name": "index",
+                    "type": "uint64"
+                },
+                {
+                    "name": "params",
+                    "type": "fungible_drops"
+                }
+            ]
+        },
+        {
+            "name": "_fungibles_s",
+            "base": "",
+            "fields": [
+                {
+                    "name": "params",
+                    "type": "fungible_params"
+                }
+            ]
+        },
+        {
+            "name": "_rolldrops_s",
+            "base": "",
+            "fields": [
+                {
+                    "name": "index",
+                    "type": "uint64"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "params",
+                    "type": "drop_params"
+                }
+            ]
+        },
+        {
+            "name": "_supplies_s",
+            "base": "",
+            "fields": [
+                {
+                    "name": "supply",
+                    "type": "fungible_pairs"
+                },
+                {
+                    "name": "max_supply",
+                    "type": "fungible_pairs"
+                }
+            ]
+        },
+        {
+            "name": "_unboxed_s",
+            "base": "",
+            "fields": [
+                {
+                    "name": "index",
+                    "type": "uint64"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "tokens",
+                    "type": "fungible_pairs"
+                }
+            ]
+        },
+        {
+            "name": "branding_meta",
+            "base": "",
+            "fields": [
+                {
+                    "name": "x64",
+                    "type": "string"
+                },
+                {
+                    "name": "x256",
+                    "type": "string"
+                },
+                {
+                    "name": "x1024",
+                    "type": "string"
+                },
+                {
+                    "name": "svg",
+                    "type": "string"
+                },
+                {
+                    "name": "extras",
+                    "type": "pair_string_string[]"
+                }
+            ]
+        },
+        {
+            "name": "cfgdestruct",
+            "base": "",
+            "fields": [
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "cfginit",
+            "base": "",
+            "fields": [
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "cfgsetparams",
+            "base": "",
+            "fields": [
+                {
+                    "name": "params",
+                    "type": "config_params"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "claimdrops",
+            "base": "",
+            "fields": [
+                {
+                    "name": "indices",
+                    "type": "u64v"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "close",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "config_params",
+            "base": "",
+            "fields": [
+                {
+                    "name": "core_symbol",
+                    "type": "symbol"
+                },
+                {
+                    "name": "preserved",
+                    "type": "symbol[]"
+                }
+            ]
+        },
+        {
+            "name": "drop_params",
+            "base": "",
+            "fields": [
+                {
+                    "name": "droptable",
+                    "type": "u64v"
+                },
+                {
+                    "name": "quant",
+                    "type": "i32v"
+                },
+                {
+                    "name": "juice",
+                    "type": "i32v"
+                },
+                {
+                    "name": "cds",
+                    "type": "i32v"
+                },
+                {
+                    "name": "tag_weights",
+                    "type": "pair_int32_float64[]"
+                }
+            ]
+        },
+        {
+            "name": "execdrops",
+            "base": "",
+            "fields": [
+                {
+                    "name": "seed",
+                    "type": "checksum256"
+                }
+            ]
+        },
+        {
+            "name": "fungible_meta",
+            "base": "branding_meta",
+            "fields": [
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "desc",
+                    "type": "string"
+                },
+                {
+                    "name": "tags",
+                    "type": "i32v"
+                }
+            ]
+        },
+        {
+            "name": "fungible_rng",
+            "base": "",
+            "fields": [
+                {
+                    "name": "odds",
+                    "type": "uint32"
+                },
+                {
+                    "name": "sym",
+                    "type": "symbol"
+                },
+                {
+                    "name": "quant",
+                    "type": "int64"
+                },
+                {
+                    "name": "tags",
+                    "type": "i32v"
+                }
+            ]
+        },
+        {
+            "name": "issue",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "tokens",
+                    "type": "fungible_pairs"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "open",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "pair_int32_float64",
+            "base": "",
+            "fields": [
+                {
+                    "name": "first",
+                    "type": "int32"
+                },
+                {
+                    "name": "second",
+                    "type": "float64"
+                }
+            ]
+        },
+        {
+            "name": "pair_string_string",
+            "base": "",
+            "fields": [
+                {
+                    "name": "first",
+                    "type": "string"
+                },
+                {
+                    "name": "second",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "pair_symbol_fungible_meta",
+            "base": "",
+            "fields": [
+                {
+                    "name": "first",
+                    "type": "symbol"
+                },
+                {
+                    "name": "second",
+                    "type": "fungible_meta"
+                }
+            ]
+        },
+        {
+            "name": "pair_symbol_int64",
+            "base": "",
+            "fields": [
+                {
+                    "name": "first",
+                    "type": "symbol"
+                },
+                {
+                    "name": "second",
+                    "type": "int64"
+                }
+            ]
+        },
+        {
+            "name": "retire",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "tokens",
+                    "type": "fungible_pairs"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "rmvdrops",
+            "base": "",
+            "fields": [
+                {
+                    "name": "index",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "rmvsupply",
+            "base": "",
+            "fields": [
+                {
+                    "name": "max_supply",
+                    "type": "fungible_pairs"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "rolldrops",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "params",
+                    "type": "drop_params"
+                }
+            ]
+        },
+        {
+            "name": "setdrops",
+            "base": "",
+            "fields": [
+                {
+                    "name": "index",
+                    "type": "uint64"
+                },
+                {
+                    "name": "params",
+                    "type": "fungible_drops"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "setfungibles",
+            "base": "",
+            "fields": [
+                {
+                    "name": "params",
+                    "type": "fungible_params"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "setsupplies",
+            "base": "",
+            "fields": [
+                {
+                    "name": "max_supply",
+                    "type": "fungible_pairs"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "transfer",
+            "base": "",
+            "fields": [
+                {
+                    "name": "from",
+                    "type": "name"
+                },
+                {
+                    "name": "to",
+                    "type": "name"
+                },
+                {
+                    "name": "tokens",
+                    "type": "asset[]"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "cfgdestruct",
+            "type": "cfgdestruct",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "cfginit",
+            "type": "cfginit",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "cfgsetparams",
+            "type": "cfgsetparams",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "claimdrops",
+            "type": "claimdrops",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "close",
+            "type": "close",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "execdrops",
+            "type": "execdrops",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "issue",
+            "type": "issue",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "open",
+            "type": "open",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "retire",
+            "type": "retire",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "rmvdrops",
+            "type": "rmvdrops",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "rmvsupply",
+            "type": "rmvsupply",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "rolldrops",
+            "type": "rolldrops",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setdrops",
+            "type": "setdrops",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setfungibles",
+            "type": "setfungibles",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setsupplies",
+            "type": "setsupplies",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "transfer",
+            "type": "transfer",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "accounts",
+            "type": "_accounts_s",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "config",
+            "type": "_config_s",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "drops",
+            "type": "_drops_s",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "fungibles",
+            "type": "_fungibles_s",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "rolldrops",
+            "type": "_rolldrops_s",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "supplies",
+            "type": "_supplies_s",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "unboxed",
+            "type": "_unboxed_s",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [],
+    "variants": [],
+    "action_results": []
+}

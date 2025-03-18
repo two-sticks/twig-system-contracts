@@ -65,6 +65,16 @@
             ]
         },
         {
+            "name": "_chainparams_s",
+            "base": "blockchain_parameters",
+            "fields": [
+                {
+                    "name": "max_ram_size",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
             "name": "_contractinfo_s",
             "base": "",
             "fields": [
@@ -73,12 +83,12 @@
                     "type": "name"
                 },
                 {
-                    "name": "version",
-                    "type": "string"
+                    "name": "contract",
+                    "type": "contract_meta"
                 },
                 {
-                    "name": "source",
-                    "type": "string"
+                    "name": "branding",
+                    "type": "branding_meta"
                 },
                 {
                     "name": "abi",
@@ -146,39 +156,15 @@
         },
         {
             "name": "_global_s",
-            "base": "blockchain_parameters",
+            "base": "",
             "fields": [
-                {
-                    "name": "max_ram_size",
-                    "type": "uint64"
-                },
-                {
-                    "name": "total_ram_bytes_reserved",
-                    "type": "uint64"
-                },
-                {
-                    "name": "total_ram_stake",
-                    "type": "int64"
-                },
                 {
                     "name": "last_producer_schedule_update",
                     "type": "block_timestamp_type"
                 },
                 {
-                    "name": "total_unpaid_blocks",
-                    "type": "uint32"
-                },
-                {
-                    "name": "total_activated_stake",
-                    "type": "int64"
-                },
-                {
                     "name": "last_producer_schedule_size",
                     "type": "uint16"
-                },
-                {
-                    "name": "last_name_close",
-                    "type": "block_timestamp_type"
                 }
             ]
         },
@@ -253,6 +239,28 @@
                 {
                     "name": "producer_authority",
                     "type": "block_signing_authority$"
+                }
+            ]
+        },
+        {
+            "name": "_rngcalls_s",
+            "base": "",
+            "fields": [
+                {
+                    "name": "index",
+                    "type": "uint64"
+                },
+                {
+                    "name": "contract",
+                    "type": "name"
+                },
+                {
+                    "name": "action",
+                    "type": "name"
+                },
+                {
+                    "name": "active",
+                    "type": "uint8"
                 }
             ]
         },
@@ -443,6 +451,32 @@
             ]
         },
         {
+            "name": "branding_meta",
+            "base": "",
+            "fields": [
+                {
+                    "name": "x64",
+                    "type": "string"
+                },
+                {
+                    "name": "x256",
+                    "type": "string"
+                },
+                {
+                    "name": "x1024",
+                    "type": "string"
+                },
+                {
+                    "name": "svg",
+                    "type": "string"
+                },
+                {
+                    "name": "extras",
+                    "type": "pair_string_string[]"
+                }
+            ]
+        },
+        {
             "name": "canceldelay",
             "base": "",
             "fields": [
@@ -453,6 +487,49 @@
                 {
                     "name": "trx_id",
                     "type": "checksum256"
+                }
+            ]
+        },
+        {
+            "name": "cleanblocks",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "contract_meta",
+            "base": "",
+            "fields": [
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "desc",
+                    "type": "string"
+                },
+                {
+                    "name": "site",
+                    "type": "string"
+                },
+                {
+                    "name": "source",
+                    "type": "string"
+                },
+                {
+                    "name": "version",
+                    "type": "string"
+                },
+                {
+                    "name": "compiler",
+                    "type": "string"
+                },
+                {
+                    "name": "build",
+                    "type": "string"
+                },
+                {
+                    "name": "extras",
+                    "type": "pair_string_string[]"
                 }
             ]
         },
@@ -621,6 +698,20 @@
             ]
         },
         {
+            "name": "modrngcall",
+            "base": "",
+            "fields": [
+                {
+                    "name": "index",
+                    "type": "uint64"
+                },
+                {
+                    "name": "active",
+                    "type": "uint8"
+                }
+            ]
+        },
+        {
             "name": "newaccount",
             "base": "",
             "fields": [
@@ -668,6 +759,20 @@
                 {
                     "name": "sent_trx",
                     "type": "bytes"
+                }
+            ]
+        },
+        {
+            "name": "pair_string_string",
+            "base": "",
+            "fields": [
+                {
+                    "name": "first",
+                    "type": "string"
+                },
+                {
+                    "name": "second",
+                    "type": "string"
                 }
             ]
         },
@@ -778,6 +883,16 @@
             ]
         },
         {
+            "name": "rmvrngcall",
+            "base": "",
+            "fields": [
+                {
+                    "name": "index",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
             "name": "setabi",
             "base": "",
             "fields": [
@@ -792,16 +907,6 @@
                 {
                     "name": "memo",
                     "type": "string$"
-                }
-            ]
-        },
-        {
-            "name": "setacctram",
-            "base": "",
-            "fields": [
-                {
-                    "name": "account",
-                    "type": "name"
                 }
             ]
         },
@@ -832,16 +937,6 @@
             ]
         },
         {
-            "name": "setcodeclean",
-            "base": "",
-            "fields": [
-                {
-                    "name": "account",
-                    "type": "name"
-                }
-            ]
-        },
-        {
             "name": "setcodeinfo",
             "base": "",
             "fields": [
@@ -850,12 +945,12 @@
                     "type": "name"
                 },
                 {
-                    "name": "version",
-                    "type": "string"
+                    "name": "contract",
+                    "type": "contract_meta"
                 },
                 {
-                    "name": "source",
-                    "type": "string"
+                    "name": "branding",
+                    "type": "branding_meta"
                 }
             ]
         },
@@ -880,6 +975,24 @@
                 {
                     "name": "is_priv",
                     "type": "uint8"
+                }
+            ]
+        },
+        {
+            "name": "setrngcall",
+            "base": "",
+            "fields": [
+                {
+                    "name": "index",
+                    "type": "uint64"
+                },
+                {
+                    "name": "contract",
+                    "type": "name"
+                },
+                {
+                    "name": "action",
+                    "type": "name"
                 }
             ]
         },
@@ -1016,6 +1129,11 @@
             "ricardian_contract": ""
         },
         {
+            "name": "cleanblocks",
+            "type": "cleanblocks",
+            "ricardian_contract": ""
+        },
+        {
             "name": "deleteauth",
             "type": "deleteauth",
             "ricardian_contract": ""
@@ -1048,6 +1166,11 @@
         {
             "name": "logsystemfee",
             "type": "logsystemfee",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "modrngcall",
+            "type": "modrngcall",
             "ricardian_contract": ""
         },
         {
@@ -1086,23 +1209,18 @@
             "ricardian_contract": ""
         },
         {
+            "name": "rmvrngcall",
+            "type": "rmvrngcall",
+            "ricardian_contract": ""
+        },
+        {
             "name": "setabi",
             "type": "setabi",
             "ricardian_contract": ""
         },
         {
-            "name": "setacctram",
-            "type": "setacctram",
-            "ricardian_contract": ""
-        },
-        {
             "name": "setcode",
             "type": "setcode",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "setcodeclean",
-            "type": "setcodeclean",
             "ricardian_contract": ""
         },
         {
@@ -1118,6 +1236,11 @@
         {
             "name": "setpriv",
             "type": "setpriv",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setrngcall",
+            "type": "setrngcall",
             "ricardian_contract": ""
         },
         {
@@ -1162,6 +1285,13 @@
         {
             "name": "blockinfo",
             "type": "_blockinfo_s",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "chainparams",
+            "type": "_chainparams_s",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
@@ -1218,6 +1348,13 @@
         {
             "name": "producers",
             "type": "_producers_s",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "rngcalls",
+            "type": "_rngcalls_s",
             "index_type": "i64",
             "key_names": [],
             "key_types": []

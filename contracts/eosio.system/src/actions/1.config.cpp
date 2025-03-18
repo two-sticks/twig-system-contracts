@@ -1,21 +1,24 @@
 void systemcore::init(bool destruct, const std::string & memo)
 {
   require_auth(get_self());
-  _global global(get_self(), get_self().value);
-  _aluckynumber aluckynumber(get_self(), get_self().value);
-
+  _chainparams chainparams_(get_self(), get_self().value);
+  _global global_(get_self(), get_self().value);
+  _aluckynumber aluckynumber_(get_self(), get_self().value);
   if (destruct){
-    global.remove();
-    aluckynumber.remove();
+    chainparams_.remove();
+    global_.remove();
+    aluckynumber_.remove();
   } else {
-    _global_s dp;
+    _chainparams_s dp;
     get_blockchain_parameters(dp);
 
-    global.set(dp, get_self());
-    aluckynumber.set(_aluckynumber_s{.producer = name("eosio")}, get_self());
+    _global_s global;
+    chainparams_.set(dp, get_self());
+    global_.set(global, get_self());
+    aluckynumber_.set(_aluckynumber_s{.producer = name("eosio")}, get_self());
   }
-  auto system_token_supply = token::get_supply(token_account, core_symbol.code());
-  check(system_token_supply.symbol == core_symbol, "specified core symbol does not exist (precision mismatch)");
+  //auto system_token_supply = token::get_supply(token_account, core_symbol.code());
+  //check(system_token_supply.symbol == core_symbol, "specified core symbol does not exist (precision mismatch)");
 }
 
 #ifdef SYSTEM_BLOCKCHAIN_PARAMETERS
@@ -25,11 +28,11 @@ void systemcore::init(bool destruct, const std::string & memo)
 void systemcore::setparams(const blockchain_parameters_t & params)
 {
   require_auth(get_self());
-  _global global(get_self(), get_self().value);
-  auto _gstate = global.get();
+  _chainparams chainparams_(get_self(), get_self().value);
+  auto chainparams = chainparams_.get();
 
-  (eosio::blockchain_parameters&)(_gstate) = params;
-  check(3 <= _gstate.max_authority_depth, "max_authority_depth should be at least 3" );
+  (eosio::blockchain_parameters&)(chainparams) = params;
+  check(3 <= chainparams.max_authority_depth, "max_authority_depth should be at least 3" );
 
 #ifndef SYSTEM_BLOCKCHAIN_PARAMETERS
   set_blockchain_parameters(params);
@@ -66,7 +69,7 @@ void systemcore::setparams(const blockchain_parameters_t & params)
   }
   set_parameters_packed(buf, stream.tellp());
 #endif
-  global.set(_gstate, get_self());
+  chainparams_.set(chainparams, get_self());
 }
 
 static constexpr systemcore::wasm_parameters default_wasm_limits = {

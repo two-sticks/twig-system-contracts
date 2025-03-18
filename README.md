@@ -6,13 +6,17 @@ Implements a lot of critical functionality that goes beyond what is provided by 
 
 This collection consists of the following individual contracts:
 
+# Core Contracts
 * [boot contract](contracts/eosio.boot/include/eosio.boot.hpp): For starting up the systems contract.
-* [token contract](contracts/eosio.token/include/eosio.token.hpp): A contract enabling fungible tokens.
-* [system contract](contracts/eosio.system/include/eosio.system.hpp): A monolithic contract that includes a variety of different functions which enhances a base Antelope blockchain for use as a public, decentralized blockchain in an opinionated way. The functions contained within this monolithic contract include (non-exhaustive):
-   + Delegated Proof of Stake (DPoS) consensus mechanism for selecting and paying (via core token inflation) a set of block producers that are chosen through delegation of the staked core tokens.
-   + An auction for bidding for premium account names.
 * [multisig contract](contracts/eosio.msig/include/eosio.msig.hpp): A contract that enables proposing Antelope transactions on the blockchain, collecting authorization approvals for many accounts, and then executing the actions within the transaction after authorization requirements of the transaction have been reached.
 * [wrap contract](contracts/eosio.wrap/include/eosio.wrap.hpp): A contract that wraps around any Antelope transaction and allows for executing its actions without needing to satisfy the authorization requirements of the transaction. If used, the permissions of the account hosting this contract should be configured to only allow highly trusted parties (e.g. the operators of the blockchain) to have the ability to execute its actions.
+* [system contract](contracts/eosio.system/include/eosio.system.hpp): A monolithic contract that includes a variety of different functions which enhances a base Antelope blockchain for use as a public, decentralized blockchain in an opinionated way. The functions contained within this monolithic contract include (non-exhaustive):
+   + Delegated Proof of Stake (DPoS) consensus mechanism for selecting and paying (via core token inflation) a set of block producers that are chosen through delegation of the staked core tokens.
+
+# Peripheral Contracts
+* [token contract](contracts/twig.token/include/twig.token.hpp): A contract enabling next gen fungible tokens, based on the original eosio.token contract.
+* [bank contract](contracts/eosio.bank/include/eosio.bank.hpp): A contract that manages the vesting of producer & team tokens.
+* [names contract](contracts/eosio.names/include/eosio.names/hpp): A contract that facilitates auction style bidding for premium account names.
 
 ## Compilation
 

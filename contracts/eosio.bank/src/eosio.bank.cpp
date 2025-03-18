@@ -12,11 +12,12 @@ void bank::cleanup()
   }
 }
 
-void bank::token_deposit(name from, name to, asset quantity, std::string memo)
+void bank::token_deposit(name from, name to, std::vector<asset> tokens, std::string memo)
 {
-  if (to != get_self() || from == get_self() || from != chunks_account || memo == "ignore_memo" || quantity.symbol != core_symbol){
+  if (to != get_self() || from == get_self() || from != chunks_account || memo == "ignore_memo" || tokens.size() != 1 || tokens[0].symbol != core_symbol){
     return;
   }
+  asset & quantity = tokens[0];
 
   systemcore::_aluckynumber aluckynumber_(system_account, system_account.value);
   auto aluckynumber = aluckynumber_.get();
@@ -52,7 +53,7 @@ void bank::token_deposit(name from, name to, asset quantity, std::string memo)
           }
 
           eosio::action(permission_level{get_self(), name("active")}, token_account, name("transfer"),
-            std::make_tuple(get_self(), producer, unvested_tokens, (std::string)"Distributing unvested production rewards for "+ producer.to_string())).send();
+            std::make_tuple(get_self(), producer, (std::vector<asset>){unvested_tokens}, (std::string)"Distributing unvested production rewards for "+ producer.to_string())).send();
 
           row.unvested.amount += unvested_tokens.amount;
         }
@@ -77,7 +78,7 @@ void bank::onepoch(uint32_t epoch)
       asset finished_vesting = asset{vesting_itr->unvesting_total.amount - vesting_itr->unvested.amount, vesting_itr->vested.symbol};
       if (finished_vesting.amount > 0){
         eosio::action(permission_level{get_self(), name("active")}, token_account, name("transfer"),
-        std::make_tuple(get_self(), vesting_itr->producer, finished_vesting, (std::string)"Distributing end of Epoch rewards...")).send();
+        std::make_tuple(get_self(), vesting_itr->producer, (std::vector<asset>){finished_vesting}, (std::string)"Distributing end of Epoch rewards...")).send();
       }
       vesting.modify(vesting_itr, eosio::same_payer, [&](auto & row){
         row.unvesting_total.amount = vesting_itr->vested.amount;
