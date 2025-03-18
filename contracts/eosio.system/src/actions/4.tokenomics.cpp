@@ -73,7 +73,7 @@ void systemcore::onchunk()
 
     chunks_tokens.amount += tokens_to_issue.find(core_symbol)->second;
     // Add in checks to not overmint from the max supply -> later
-    eosio::action(permission_level{chunks_account, name("active")}, token_account, name("issue"),
+    eosio::action(permission_level{token_account, name("active")}, token_account, name("issue"),
       std::make_tuple(chunks_account, tokens_to_issue, (std::string)"A chunk has been found! Distributing rewards...")).send();
   }
 
