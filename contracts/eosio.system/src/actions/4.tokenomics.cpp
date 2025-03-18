@@ -58,10 +58,13 @@ void systemcore::onchunk()
   _aluckynumber aluckynumber_(get_self(), get_self().value);
   auto aluckynumber = aluckynumber_.get();
 
+  asset chunks_tokens{0, core_symbol};
+
   token::_accounts accounts(token_account, token_account.value);
   auto chunks_balance = accounts.require_find(chunks_account.value, "chunks_account_missing");
-
-  asset chunks_tokens{chunks_balance->balance.find(core_symbol)->second, chunks_balance->balance.find(core_symbol)->first};
+  if (chunks_balance->balance.find(core_symbol) != chunks_balance->balance.end()){
+    chunks_tokens.amount = chunks_balance->balance.find(core_symbol)->second;
+  }
 
   // Issue tokens
   if (aluckynumber.epoch < 21){
